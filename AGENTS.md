@@ -1,4 +1,4 @@
-# GuitarTutor — agent notes
+# Guitar Virtuoso — agent notes
 
 Vanilla-JS PWA, no build step. `python serve.py` → localhost:8000.
 `npm test` → `node test/selftest.js` (must stay green: 50 tests, 1 known-limitation).
@@ -64,8 +64,8 @@ window in the worklet, reused YIN buffers.
 
 ## Deploy & roadmap decisions (2026-09-15)
 
-- **Hosting**: GitHub Pages from `main` → https://composerjunhee.github.io/GuitarTutor/
-  (repo: github.com/composerjunhee/GuitarTutor, **public** — user confirmed OK
+- **Hosting**: GitHub Pages from `main` → https://composerjunhee.github.io/GuitarVirtuoso/
+  (repo: github.com/composerjunhee/GuitarVirtuoso, **public** — user confirmed OK
   since client JS is inspectable anyway). Push to main auto-deploys.
 - **Private + Cloudflare Pages**: considered, deferred — repo stays public.
 - **Language/framework migration**: user decided NO switch to another language.

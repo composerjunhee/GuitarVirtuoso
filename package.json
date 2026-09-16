@@ -1,5 +1,5 @@
 {
-  "name": "guitartutor",
+  "name": "guitar-virtuoso",
   "private": true,
   "type": "module",
   "description": "Chord library, fretboard trainer, and tuner. Vanilla JS PWA, no build step.",

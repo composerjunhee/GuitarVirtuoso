@@ -1,6 +1,6 @@
 {
-  "name": "GuitarTutor",
-  "short_name": "GuitarTutor",
+  "name": "Guitar Virtuoso",
+  "short_name": "Virtuoso",
   "description": "Chord library, fretboard trainer, and tuner for guitar.",
   "start_url": "./index.html",
   "scope": "./",

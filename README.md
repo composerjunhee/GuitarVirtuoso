@@ -1,4 +1,4 @@
-# GuitarTutor
+# Guitar Virtuoso
 
 기타 코드 튜터 — chord library, fretboard trainer, tuner, ear training.
 Vanilla JS PWA, no build step. KO/EN.

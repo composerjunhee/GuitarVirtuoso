@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gt-v15';  // dual bar-map strips: current bar + dimmed next-bar preview
+const CACHE = 'gv-v1';  // renamed to Guitar Virtuoso; fresh cache prefix
 
 const ASSETS = [
   './',
