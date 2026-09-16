@@ -153,10 +153,12 @@ function playBuffer(samples, when, gain = 0.45) {
   src.start(when);
 }
 
-// Strum a voicing low→high with a small per-string stagger.
-export function playVoicing(voicing, { strumMs = 24, dur = 1.6 } = {}) {
+// Strum a voicing low→high with a small per-string stagger. `at` offsets
+// the start in seconds so a caller can schedule a whole sequence inside
+// one gesture (ear trainer's progression drill).
+export function playVoicing(voicing, { strumMs = 24, dur = 1.6, at = 0 } = {}) {
   const ctx = audioCtx();
-  const t0 = ctx.currentTime + 0.03;
+  const t0 = ctx.currentTime + 0.03 + at;
   let i = 0;
   for (let s = 0; s < 6; s++) {
     const f = voicing.frets[s];
@@ -165,4 +167,11 @@ export function playVoicing(voicing, { strumMs = 24, dur = 1.6 } = {}) {
     playBuffer(renderPluck(freq, ctx.sampleRate, dur), t0 + i * strumMs / 1000);
     i++;
   }
+}
+
+// One plucked note by midi number — the ear trainer's two-note drills.
+export function playNote(midi, { at = 0, dur = 1.2, gain = 0.45 } = {}) {
+  const ctx = audioCtx();
+  const sig = renderPluck(midiToFreq(midi), ctx.sampleRate, dur);
+  playBuffer(sig, ctx.currentTime + 0.03 + at, gain);
 }

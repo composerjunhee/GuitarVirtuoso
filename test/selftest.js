@@ -7,15 +7,25 @@
 //   - voicings: every root × quality yields ≥1 playable, correct voicing
 //   - symbols: parseSymbol ↔ chordSymbol round-trips
 
-import { renderPluck, renderStrum } from '../js/audio/pluck.js';
+import { renderPluck, renderStrum, playNote } from '../js/audio/pluck.js';
 import { detectPitch } from '../js/audio/pitch.js';
 import { profileFromSpectrum, matchChord } from '../js/audio/chordDetect.js';
 import { voicingsFor, voicingPcs, voiceLead } from '../js/theory/voicings.js';
 import { parseSymbol, chordSymbol, chordPcs, QUALITIES, makeChord } from '../js/theory/chords.js';
 import { STRINGS, midiToFreq, freqToMidi, midiToPc } from '../js/theory/notes.js';
 import { STANDARDS } from '../js/data/standards.js';
+import { PROGRESSIONS } from '../js/data/progressions.js';
 
 const SR = 44100;
+
+// ear.js is dynamically imported in the ear-drills block below; its
+// transitive deps (state.js, i18n.js) read localStorage at module load,
+// which Node doesn't have — stub it before that import runs.
+if (typeof globalThis.localStorage === 'undefined') {
+  globalThis.localStorage = {
+    getItem: () => null, setItem: () => {}, removeItem: () => {},
+  };
+}
 
 // seeded RNG so renders are deterministic — unseeded KS noise made the
 // chord tests flaky run to run
@@ -332,6 +342,32 @@ export async function runAll(report = console.log) {
       for (const b of s.bars) makeChord(s.key + b.off, b.q);
     } catch (e) { threw = e.message; }
     ok(!threw, `${s.id}: makeChord resolves every bar`, threw);
+  }
+
+  // -- ear-trainer drill math (pure helpers, no DOM needed) --
+  report('ear drills');
+  ok(typeof playNote === 'function', 'playNote exported from pluck.js');
+  const ear = await import('../js/screens/ear.js');
+  ok(ear.clampMidi(30) === 40 && ear.clampMidi(90) === 76 &&
+    ear.clampMidi(52) === 52, 'clampMidi bounds to 40–76');
+  ok(ear.hlAnswerId(50, 52) === 'higher' && ear.hlAnswerId(50, 48) === 'lower' &&
+    ear.hlAnswerId(50, 50) === 'same', 'high-low pair → answer id');
+  ok(ear.intervalSecond(60, 7, 'desc') === 53 &&
+    ear.intervalSecond(60, 7, 'asc') === 67 &&
+    ear.intervalSecond(60, 7, 'harm') === 67,
+    'interval direction resolves second note');
+  { // degree resolution matches the strum.js recipe: I–V–vi–IV in C = C G Am F
+    const cs = ear.progChords(0, PROGRESSIONS.find(p => p.id === 'I-V-vi-IV'));
+    ok(cs.length === 4 && cs[0].root === 0 && cs[0].quality === '' &&
+      cs[1].root === 7 && cs[1].quality === '' &&
+      cs[2].root === 9 && cs[2].quality === 'm' && cs[3].root === 5,
+      'progChords resolves I–V–vi–IV in C');
+  }
+  { // every preset progression must voice-lead cleanly — a null slot would
+    // deal a silent bar into the prog drill
+    const allOk = PROGRESSIONS.every(p =>
+      [0, 7, 5].every(key => voiceLead(ear.progChords(key, p)).every(Boolean)));
+    ok(allOk, 'all preset progressions voice-lead (keys C/G/F)');
   }
 
   report(`\n${pass} passed, ${fail} failed` +
