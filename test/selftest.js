@@ -489,6 +489,52 @@ export async function runAll(report = console.log) {
     ok(allOk, 'every standard: cells partition slots in order');
   }
 
+  // -- fretboard game: position math (pure helpers, no DOM needed) --
+  report('fretboard game');
+  const fg = await import('../js/screens/fretboardGame.js');
+  { // C (pc 0) inside frets 0–4: A-string 3 + B-string 1, nothing else —
+    // low/hi E strings need fret 8, D wants 10, G wants 5
+    const pos = fg.positionsOfPc(0, 0, 4).map(p => `${p.string},${p.fret}`);
+    ok(pos.length === 2 && pos.includes('1,3') && pos.includes('4,1'),
+      'positionsOfPc C in 0–4 → A3 + B1', pos.join(' '));
+  }
+  { // E (pc 4) in the same window: both open strings + D-string 2
+    const pos = fg.positionsOfPc(4, 0, 4).map(p => `${p.string},${p.fret}`);
+    ok(pos.length === 3 && pos.includes('0,0') && pos.includes('2,2') &&
+      pos.includes('5,0'), 'positionsOfPc E in 0–4 → open E/D2/open e',
+      pos.join(' '));
+  }
+  { // octave duplication: B (pc 11) on the A string lands at f=2 and 14 —
+    // range 0–12 keeps only the first, 0–15 keeps both
+    const a12 = fg.positionsOfPc(11, 0, 12).filter(p => p.string === 1);
+    const a15 = fg.positionsOfPc(11, 0, 15).filter(p => p.string === 1);
+    ok(a12.length === 1 && a12[0].fret === 2 &&
+      a15.length === 2 && a15[1].fret === 14,
+      'positionsOfPc respects the range ceiling');
+  }
+  { // every pc has ≥1 position in every offered range — no dead questions
+    const ranges = Object.values(fg.FRET_RANGES);
+    const cover = ranges.every(([lo, hi]) =>
+      [...Array(12).keys()].every(pc => fg.positionsOfPc(pc, lo, hi).length > 0));
+    ok(cover, 'every pc reachable in every fret range');
+  }
+  { // name mode: the answer is the pc of the highlighted cell
+    ok(fg.nameAnswer(1, 3) === midiToPc(STRINGS[1] + 3) &&   // C on A3
+      fg.nameAnswer(5, 0) === 4,                            // open high E
+      'nameAnswer = midiToPc(fretToMidi)');
+  }
+  { // all mode: completes only when every in-range position is found
+    const pc = 0, [lo, hi] = [0, 4];
+    const all = fg.positionsOfPc(pc, lo, hi);
+    const partial = new Set([`${all[0].string},${all[0].fret}`]);
+    const full = new Set(all.map(p => `${p.string},${p.fret}`));
+    ok(!fg.allFound(pc, partial, lo, hi) && fg.allFound(pc, full, lo, hi),
+      'allFound needs every position, not just one');
+    // stray keys in the set don't matter — allFound only checks coverage
+    ok(fg.allFound(pc, new Set([...full, '9,9']), lo, hi),
+      'allFound ignores extra keys');
+  }
+
   report(`\n${pass} passed, ${fail} failed` +
     (known ? `, ${known} known-limitation${known === 1 ? '' : 's'}` : ''));
   return { pass, fail };

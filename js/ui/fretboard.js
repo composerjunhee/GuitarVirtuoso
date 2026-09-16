@@ -51,7 +51,12 @@ function cellX(fret, lefty) {
 }
 function stringY(s) { return PAD_T + (5 - s) * SH; }
 
-export function createFretboard(container, { interactive = false, lefty = false, onChange } = {}) {
+// opts:
+//   interactive — paint tap hit areas (open/mute column + fret cells)
+//   onChange    — shape-builder callback: taps toggle shape[] (practice.js)
+//   onCellTap(s, f) — quiz-style callback: taps only report the cell
+//     (fretboardGame.js); the shape is left untouched
+export function createFretboard(container, { interactive = false, lefty = false, onChange, onCellTap } = {}) {
   // Lefty mirrors the board: the nut and the open/mute column move to the
   // right edge, which needs extra room for the open rings and string names.
   const vw = W + (lefty ? 28 : 0);
@@ -59,6 +64,7 @@ export function createFretboard(container, { interactive = false, lefty = false,
   const layerBase = el('g', {});
   const layerMarks = el('g', {});
   const layerInput = el('g', {});
+  const layerFx = el('g', {});     // transient tap flashes (good/bad)
   const layerHits = el('g', {});
 
   // wood body gradient (per-instance id — two boards can share a document)
@@ -71,7 +77,7 @@ export function createFretboard(container, { interactive = false, lefty = false,
     el('stop', { offset: '100%', 'stop-color': C.woodB }),
   );
   defs.append(grad);
-  svg.append(defs, layerBase, layerMarks, layerInput, layerHits);
+  svg.append(defs, layerBase, layerMarks, layerInput, layerFx, layerHits);
   container.replaceChildren(svg);
 
   // nut / open column + frets. In lefty view the fret order mirrors, so the
@@ -147,11 +153,21 @@ export function createFretboard(container, { interactive = false, lefty = false,
     for (const m of markers) {
       const cx = cellX(m.fret, lefty);
       const cy = stringY(m.string);
-      const color = m.kind === 'root' ? C.root : m.kind === 'dim' ? C.dim : C.tone;
+      const color = m.kind === 'root' ? C.root : m.kind === 'dim' ? C.dim
+        : m.kind === 'good' ? C.good : m.kind === 'bad' ? C.bad : C.tone;
       if (m.fret === 0) {
         // open-string marker: ring off the nut side
         layerMarks.append(el('circle', {
           cx: openX, cy, r: 7.5, fill: 'none', stroke: color, 'stroke-width': 2.5,
+          ...(m.kind === 'ans' ? { 'stroke-dasharray': '3 2' } : {}),
+        }));
+        continue;
+      }
+      if (m.kind === 'ans') {
+        // quiz reveal: hollow dashed accent ring = "an answer lives here"
+        layerMarks.append(el('circle', {
+          cx, cy, r: 11.5, fill: 'none', stroke: C.root,
+          'stroke-width': 2, 'stroke-dasharray': '4 3',
         }));
         continue;
       }
@@ -208,6 +224,7 @@ export function createFretboard(container, { interactive = false, lefty = false,
         fill: 'transparent', cursor: 'pointer', 'class': 'fb-hit fb-open',
       });
       r.addEventListener('click', () => {
+        if (onCellTap) { onCellTap(s, 0); return; }   // open column = fret 0
         shape[s] = shape[s] === null ? 0 : shape[s] === 0 ? -1 : null;
         drawShape(); onChange?.(getShape());
       });
@@ -219,6 +236,7 @@ export function createFretboard(container, { interactive = false, lefty = false,
           'class': 'fb-hit fb-cell',
         });
         cell.addEventListener('click', () => {
+          if (onCellTap) { onCellTap(s, f); return; }
           shape[s] = shape[s] === f ? null : f;
           drawShape(); onChange?.(getShape());
         });
@@ -232,6 +250,21 @@ export function createFretboard(container, { interactive = false, lefty = false,
 
   return {
     setMarkers(m) { markers = m; drawMarkers(); },
+    // transient cell flash for quiz feedback (fretboardGame): paints a
+    // fading overlay rect in layerFx; the .fb-fx CSS animation owns the
+    // fade and the node removes itself on animationend.
+    flashCell(s, f, ok) {
+      const fx = el('rect', {
+        x: f === 0 ? (lefty ? vw - 36 : 24) : cellX(f, lefty) - FW / 2,
+        y: stringY(s) - SH / 2,
+        width: f === 0 ? 22 : FW, height: SH, rx: 7,
+        'class': `fb-fx ${ok ? 'fb-fx-good' : 'fb-fx-bad'}`,
+      });
+      fx.addEventListener('animationend', () => fx.remove());
+      // reduced-motion kills the animation (and its end event) — fall back
+      setTimeout(() => fx.remove(), 700);
+      layerFx.append(fx);
+    },
     getShape,
     setShape(frets) {
       for (let s = 0; s < 6; s++) shape[s] = frets[s];

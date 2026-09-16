@@ -1188,3 +1188,35 @@ input:focus-visible, select:focus-visible {
   .chart-cell, .chart-sym, .chart-beats i { transition: none; }
 }
 
+/* ============ fretboard game (#fretBody, js/screens/fretboardGame.js) ============
+   The run card is wider than the 560px .setup-card so the 15-fret SVG keeps
+   big tappable cells; on phones the .board rules already scroll it. */
+#fgRun.setup-card, .fg-run { max-width: 760px; }
+/* [hidden] loses to .chip-row's display:flex — restate it for the answers
+   strip (find mode hides it; name mode shows the root grid) */
+.chip-row[hidden] { display: none; }
+/* …and to display:inline-flex on the run buttons (Next/Reveal). This also
+   repairs the same pattern on ear.js's earNext, which never hid. */
+.ghost[hidden], .primary[hidden] { display: none; }
+.fg-tally {
+  color: var(--dim);
+  min-height: 18px;
+  margin: 6px 0 2px;
+}
+.fg-result { font-family: var(--mono); font-size: 14px; line-height: 1.9; }
+
+/* tap-flash overlay — painted by flashCell() in js/ui/fretboard.js. The
+   rect fades out via this animation; the node removes itself on
+   animationend (JS keeps a setTimeout fallback for reduced-motion, where
+   the animation never runs). */
+.fb-fx { pointer-events: none; opacity: .8; }
+.fb-fx-good { fill: var(--good); }
+.fb-fx-bad { fill: var(--bad); }
+@media (prefers-reduced-motion: no-preference) {
+  .fb-fx { animation: fb-fx-flash .55s ease-out forwards; }
+}
+@keyframes fb-fx-flash {
+  from { opacity: .8; }
+  to { opacity: 0; }
+}
+

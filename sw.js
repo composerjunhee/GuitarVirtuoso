@@ -40,6 +40,7 @@ const ASSETS = [
   'js/screens/progBuilder.js',
   'js/screens/strum.js',
   'js/screens/songs.js',
+  'js/screens/fretboardGame.js',
   'js/screens/stats.js',
   'js/screens/settings.js',
 ];
