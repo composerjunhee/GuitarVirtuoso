@@ -15,7 +15,7 @@
 import { makeChord, chordSymbol, requiredPcs } from '../theory/chords.js';
 import { voicingsFor, voiceLead } from '../theory/voicings.js';
 import { preferFlat, pcName } from '../theory/notes.js';
-import { STANDARDS } from '../data/standards.js';
+import { STANDARDS, GENRES } from '../data/standards.js';
 import { segRow, showBanner } from '../ui/components.js';
 import { Metronome } from '../audio/metronome.js';
 import { playVoicing } from '../audio/pluck.js';
@@ -204,20 +204,24 @@ function showPanel(p) {
 // ---------- setup ----------
 
 function renderSetupRows() {
-  // the song dropdown is one optgroup today — same shape as the strum/
-  // practice pickers so more groups can join later. A standard's canonical
-  // key rides in the option text: "Autumn Leaves (Gm)".
+  // one optgroup per genre present in the catalog, in GENRES order —
+  // same shape as the strum/practice pickers. A song's canonical key
+  // rides in the option text: "Autumn Leaves (Gm)".
   const sel = q('sgSong');
   sel.replaceChildren();
-  const og = document.createElement('optgroup');
-  og.label = s('standards');
-  for (const p of STANDARDS) {
-    const keyHint = Number.isInteger(p.key)
-      ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})`
-      : '';
-    og.append(new Option(p.label + keyHint, p.id));
+  for (const g of Object.keys(GENRES)) {
+    const progs = STANDARDS.filter(p => p.genre === g);
+    if (!progs.length) continue;
+    const og = document.createElement('optgroup');
+    og.label = GENRES[g][getLang()] ?? GENRES[g].en;
+    for (const p of progs) {
+      const keyHint = Number.isInteger(p.key)
+        ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})`
+        : '';
+      og.append(new Option(p.label + keyHint, p.id));
+    }
+    sel.append(og);
   }
-  sel.append(og);
   if (!STANDARDS.some(p => p.id === setup.song)) setup.song = STANDARDS[0].id;
   sel.value = setup.song;
   segRow(q('sgMode'), [

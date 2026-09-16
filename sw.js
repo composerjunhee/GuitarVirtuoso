@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v4';  // + song mode screen; precache standards.js fix
+const CACHE = 'gv-v5';  // + fretboard game, 33-song catalog with genre optgroups
 
 const ASSETS = [
   './',

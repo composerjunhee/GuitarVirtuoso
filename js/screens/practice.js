@@ -14,7 +14,7 @@ import { playVoicing } from '../audio/pluck.js';
 import { Metronome } from '../audio/metronome.js';
 import { audioCtx } from '../audio/engine.js';
 import { DECKS, PROGRESSIONS } from '../data/progressions.js';
-import { STANDARDS } from '../data/standards.js';
+import { STANDARDS, GENRES } from '../data/standards.js';
 import { initProgBuilder, getCustomProgressions } from './progBuilder.js';
 import { t, getLang, onLangChange } from '../i18n.js';
 import { settings, loadStats, recordAttempt, loadDeck } from '../state.js';
@@ -79,7 +79,11 @@ function renderSetup() {
     sel.append(og);
   };
   addGroup(t('pr.progPresets'), PROGRESSIONS, false);
-  addGroup(t('pr.standards'), STANDARDS, true);
+  // one optgroup per genre present, in GENRES order
+  for (const g of Object.keys(GENRES)) {
+    addGroup(GENRES[g][getLang()] ?? GENRES[g].en,
+      STANDARDS.filter(p => p.genre === g), true);
+  }
   addGroup(t('pr.myProgs'), customs, false);
   sel.value = setup.prog;
   rootPicker($('keyChips'), setup.key, id => { setup.key = id; }, opts());

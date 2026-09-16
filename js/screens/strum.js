@@ -15,7 +15,7 @@ import { QUALITIES, makeChord, chordSymbol, requiredPcs }
 import { voicingsFor, voiceLead } from '../theory/voicings.js';
 import { preferFlat, pcName } from '../theory/notes.js';
 import { PROGRESSIONS } from '../data/progressions.js';
-import { STANDARDS } from '../data/standards.js';
+import { STANDARDS, GENRES } from '../data/standards.js';
 import { renderChordDiagram } from '../ui/chordDiagram.js';
 import { chipRow, segRow, rootPicker, showBanner } from '../ui/components.js';
 import { Metronome } from '../audio/metronome.js';
@@ -328,7 +328,11 @@ function renderSetupRows() {
     progEl.append(og);
   };
   addGroup(s('progPresets'), PROGRESSIONS, false);
-  addGroup(s('standards'), STANDARDS, true);
+  // one optgroup per genre present, in GENRES order
+  for (const g of Object.keys(GENRES)) {
+    addGroup(GENRES[g][getLang()] ?? GENRES[g].en,
+      STANDARDS.filter(p => p.genre === g), true);
+  }
   progEl.value = setup.prog;
   segRow(q('stMic'), [
     { id: 'off', label: s('micOff') },

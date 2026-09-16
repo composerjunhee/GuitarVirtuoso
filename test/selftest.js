@@ -14,7 +14,7 @@ import { profileFromSpectrum, matchChord } from '../js/audio/chordDetect.js';
 import { voicingsFor, voicingPcs, voiceLead } from '../js/theory/voicings.js';
 import { parseSymbol, chordSymbol, chordPcs, QUALITIES, makeChord } from '../js/theory/chords.js';
 import { STRINGS, midiToFreq, freqToMidi, midiToPc } from '../js/theory/notes.js';
-import { STANDARDS } from '../js/data/standards.js';
+import { STANDARDS, GENRES } from '../js/data/standards.js';
 import { PROGRESSIONS } from '../js/data/progressions.js';
 
 const SR = 44100;
@@ -533,6 +533,45 @@ export async function runAll(report = console.log) {
     // stray keys in the set don't matter — allFound only checks coverage
     ok(fg.allFound(pc, new Set([...full, '9,9']), lo, hi),
       'allFound ignores extra keys');
+  }
+
+  // -- song catalog: the whole STANDARDS list across all genres --
+  // (per-song quality/offset/half-pair/makeChord checks already ran in the
+  // 'standards data' block above — it loops every catalog entry)
+  report('song catalog');
+  ok(STANDARDS.length >= 30, `≥30 songs in catalog (got ${STANDARDS.length})`);
+  ok(Object.keys(GENRES).every(g => GENRES[g].ko && GENRES[g].en),
+    'GENRES labels all bilingual (ko+en)');
+  ok(STANDARDS.every(sd => sd.genre && sd.genre in GENRES),
+    'every song has a genre in GENRES',
+    STANDARDS.filter(sd => !(sd.genre in GENRES)).map(sd => sd.id).join(','));
+  ok(STANDARDS.filter(sd => sd.genre === 'jazz').length >= 12,
+    'jazz group non-empty (≥12)',
+    `jazz=${STANDARDS.filter(sd => sd.genre === 'jazz').length}`);
+  for (const sd of STANDARDS) {
+    // cells must partition slots in order and beats must equal 4×cells —
+    // the same barCells contract the song-mode chart relies on
+    const cells = songs.barCells(sd);
+    const flat = cells.flatMap(c => c.slots);
+    const beats = sd.bars.reduce((a, b) => a + (b.half ? 2 : 4), 0);
+    ok(cells.every(c => c.slots.length <= 2) &&
+      flat.length === sd.bars.length && flat.every((v, i) => v === i) &&
+      beats === cells.length * 4,
+      `${sd.id}: barCells partitions slots, beats = 4×cells`,
+      `cells=${cells.length} slots=${flat.length} beats=${beats}`);
+  }
+  { // spot-check: All of Me opens on Cmaj7 (pcs 0,4,7,11), bar 11 is Am7
+    const aom = STANDARDS.find(x => x.id === 'all-of-me');
+    ok(!!aom && aom.genre === 'jazz' &&
+      aom.bars[0].off === 0 && aom.bars[0].q === 'maj7' &&
+      aom.bars[10].off === 9 && aom.bars[10].q === 'm7',
+      'All of Me starts Cmaj7 … Am7 (slot 10)');
+  }
+  { // spot-check: Hotel California opens on Bm (i of B minor)
+    const hc = STANDARDS.find(x => x.id === 'hotel-california');
+    ok(!!hc && hc.key === 11 && hc.minor === true &&
+      hc.bars[0].off === 0 && hc.bars[0].q === 'm',
+      'Hotel California bar 0 = Bm');
   }
 
   report(`\n${pass} passed, ${fail} failed` +
