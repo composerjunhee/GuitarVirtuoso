@@ -61,3 +61,15 @@ G), harmonic tolerance ∝ k (stiff-string partials drift sharp with k),
 fifth-omission parity with voicings.js (both mic and virtual paths),
 `res.ok &&` in the vote check, analyser smoothing 0.3, DC blocker + 4096
 window in the worklet, reused YIN buffers.
+
+## Deploy & roadmap decisions (2026-09-15)
+
+- **Hosting**: GitHub Pages from `main` → https://composerjunhee.github.io/GuitarTutor/
+  (repo: github.com/composerjunhee/GuitarTutor, **public** — user confirmed OK
+  since client JS is inspectable anyway). Push to main auto-deploys.
+- **Private + Cloudflare Pages**: considered, deferred — repo stays public.
+- **Language/framework migration**: user decided NO switch to another language.
+  Deferred upgrade path for when the codebase outgrows no-build vanilla:
+  Vite + TypeScript → Svelte/React → Capacitor (native) → Workers backend
+  (sync/accounts). Do it all at once later, not piecemeal.
+- **Play Store** (future): PWABuilder/Bubblewrap TWA packaging.
