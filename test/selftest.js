@@ -9,6 +9,7 @@
 
 import { renderPluck, renderStrum, playNote } from '../js/audio/pluck.js';
 import { detectPitch } from '../js/audio/pitch.js';
+import { makeOnsetDetector } from '../js/audio/worklet-processor.js';
 import { profileFromSpectrum, matchChord } from '../js/audio/chordDetect.js';
 import { voicingsFor, voicingPcs, voiceLead } from '../js/theory/voicings.js';
 import { parseSymbol, chordSymbol, chordPcs, QUALITIES, makeChord } from '../js/theory/chords.js';
@@ -126,6 +127,48 @@ function pollWindows(buf, sym, offsets = [1500, 3000, 4500, 6000, 7500], peakDb 
 const wins = votes => votes.filter(Boolean).length;
 const wbits = votes => votes.map(x => x ? 1 : 0).join('');
 
+// ---------- onset path (worklet detector, hop-by-hop) ----------
+const HOP = 512;
+
+// Feed a rendered buffer through the worklet's onset detector exactly like
+// FrameProcessor.process() does: DC-block each sample (same one-pole,
+// DC_R = 0.995), fire every 512-sample hop. Returns the hop indices where
+// an attack was reported.
+function onsetHops(buf, sr = SR) {
+  const detect = makeOnsetDetector(sr, HOP);
+  const hop = new Float32Array(HOP);
+  const hits = [];
+  let x1 = 0, y1 = 0, pi = 0, idx = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const x = buf[i];
+    const y = x - x1 + 0.995 * y1;
+    x1 = x; y1 = y;
+    hop[pi++] = y;
+    if (pi === HOP) {
+      if (detect(hop)) hits.push(idx);
+      idx++; pi = 0;
+    }
+  }
+  return hits;
+}
+
+// Screen-gate model: a window's vote counts only while fresh — within
+// ~1.8 s after a pick attack (screens: performance.now()-lastOnset < 1800).
+// A window at sample offset `off` polls when its 8192-frame arrives ≈
+// off+8192; an attack makes it fresh iff the attack came first and is
+// younger than FRESH_MS.
+const FRESH_MS = 1800;
+const db2lin = db => Math.pow(10, db / 20);
+function gatedWins(buf, sym, offsets = [1500, 3000, 4500, 6000, 7500], peakDb = -32) {
+  const votes = pollWindows(buf, sym, offsets, peakDb);
+  const hits = onsetHops(buf).map(h => h * HOP);        // attack sample index
+  return votes.filter((v, i) => {
+    const now = offsets[i] + 8192;
+    const fresh = hits.some(h => h <= now && (now - h) / SR * 1000 < FRESH_MS);
+    return v && fresh;
+  }).length;
+}
+
 // ---------- tests ----------
 
 export async function runAll(report = console.log) {
@@ -224,15 +267,20 @@ export async function runAll(report = console.log) {
     const em = renderStrum(specsFromFrets(EM_F), SR, 1.6, mulberry32(47));
     ok(wins(pollWindows(em, 'G')) === 0, 'Em audio rejects G target');
   }
-  { // KNOWN: a superset ring can complete a subset target with no strum —
-    // Em7's pcs cover Em entirely, so spectrum alone can't tell "still
-    // ringing" from "just played". The app's onset gate is the real fix.
-    const buf = renderStrum([null, null, null, null, null, null],
-      SR, 1.6, mulberry32(48),
-      { residual: { specs: specsFromFrets([0, 2, 0, 0, 0, 0]), levelDb: -15, agoSec: 1 } });
-    know(wins(pollWindows(buf, 'Em')) === 0,
-      'Em7 ring alone does not pass Em',
-      'residual ring can complete a subset target — onset gating covers it');
+  { // a superset ring CAN complete a subset target spectrally — Em7's pcs
+    // cover Em entirely, so spectrum alone can't tell "still ringing" from
+    // "just played". The app's real defense is the onset gate: votes only
+    // count within ~1.8 s of a pick attack. Model the whole timeline — an
+    // Em7 strummed at -15 dB with its attack at t=0 (the residual layer is
+    // exactly this buffer's tail). The raw spectrum keeps passing Em long
+    // after, but once the attack is >1.8 s stale every vote is gated out.
+    const late = [88000, 93000, 98000, 103000, 108000];      // ~2.0–2.45 s
+    const buf = renderStrum(specsFromFrets([0, 2, 0, 0, 0, 0]),
+      SR, 4.5, mulberry32(48), { mixGain: 0.4 * db2lin(-15) });
+    const raw = wins(pollWindows(buf, 'Em', late));
+    ok(raw >= 3 && gatedWins(buf, 'Em', late) === 0,
+      'Em7 ring alone does not pass Em (onset gate)',
+      `raw=${raw} gated=${gatedWins(buf, 'Em', late)}`);
   }
   { // sympathetic open strings only (no strum) must not verify chords made
     // entirely of open-string pcs — the classic false-accept path
@@ -240,6 +288,51 @@ export async function runAll(report = console.log) {
       SR, 1.6, mulberry32(49), { sympatheticDb: -20 });
     ok(wins(pollWindows(buf, 'Em')) === 0, 'open-string ring rejects Em');
     ok(wins(pollWindows(buf, 'G')) === 0, 'open-string ring rejects G');
+  }
+
+  // -- onset detector: HF spectral flux, driven hop-by-hop like the worklet --
+  report('onset detector (HF flux)');
+  const NULL6 = [null, null, null, null, null, null];
+  { // silence must never self-trigger
+    ok(onsetHops(new Float32Array(SR)).length === 0, 'silence → no onset');
+  }
+  { // first loud hop after silence: a strum fires right at the pick
+    const buf = renderStrum(specsFromFrets(G_F), SR, 1.6, mulberry32(50));
+    const h = onsetHops(buf);
+    ok(h.length >= 1 && h[0] <= 5, 'strum from silence fires at the pick',
+      `hits=${h.slice(0, 8)}`);
+  }
+  { // residual ring never re-fires. The faithful model includes the ring's
+    // own attack at t=0 (a fresh detector fed a mid-ring buffer sees the
+    // buffer edge as a step — in the app the detector was already running
+    // when the chord was struck). Only the attack may report; the next
+    // ~4 s of pure ring must produce nothing.
+    const buf = renderStrum(specsFromFrets([0, 2, 0, 0, 0, 0]),
+      SR, 4.5, mulberry32(48), { mixGain: 0.4 * db2lin(-15) });
+    const h = onsetHops(buf);
+    ok(h.length >= 1 && h.every(x => x <= 8),
+      'Em7 ring → onset only at its own attack', `hits=${h}`);
+  }
+  { // the key scenario: a fresh strum over a still-ringing chord. The ring's
+    // attack fired at t=0; a C strum lands at 1.5 s — the detector must fire
+    // there too even though LF energy never dropped (the old RMS baseline
+    // swallowed exactly this jump).
+    const buf = renderStrum(specsFromFrets([0, 2, 0, 0, 0, 0]),
+      SR, 3.0, mulberry32(51), { mixGain: 0.4 * db2lin(-12) });
+    const strumAt = Math.round(1.5 * SR);
+    const strum = renderStrum(specsFromFrets(C_F), SR, 1.4, mulberry32(52));
+    for (let i = 0; i < strum.length && strumAt + i < buf.length; i++)
+      buf[strumAt + i] += strum[i];
+    const h = onsetHops(buf);
+    const want = Math.floor(strumAt / HOP);
+    ok(h.length >= 2 && h[0] <= 8 &&
+      h.some(x => x >= want && x - want <= 6),
+      'restrum over loud ring fires at the strum',
+      `hits=${h} want≈${want}`);
+  }
+  { // steady noise bed alone: HF flux sits at its baseline → no onset
+    const buf = renderStrum(NULL6, SR, 1.6, mulberry32(53), { noiseDb: -30 });
+    ok(onsetHops(buf).length === 0, 'noise bed alone → no onset');
   }
 
   // -- voicings: full library coverage --

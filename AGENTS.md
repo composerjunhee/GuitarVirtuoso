@@ -1,7 +1,7 @@
 # Guitar Virtuoso — agent notes
 
 Vanilla-JS PWA, no build step. `python serve.py` → localhost:8000.
-`npm test` → `node test/selftest.js` (must stay green: 50 tests, 1 known-limitation).
+`npm test` → `node test/selftest.js` (must stay green: 130 tests, 0 known).
 Python on PATH is a Store stub — use `%LOCALAPPDATA%\Python\bin\python.exe`.
 
 ## Machine setup (helper space)
@@ -34,11 +34,13 @@ main session as manager. Conventions:
 The 50-test selftest uses a clean synthesized signal; it does NOT model real
 mic input. Known gaps, in priority order:
 
-- **Residual ring / sympathetic resonance** — the previous chord keeps
-  sounding into the next window; open-string pcs (E,A,D,G,B,e) can even
-  complete a target with no strum. Mitigated today by the ≥4-of-6 vote ring
-  (with current-frame-must-pass); the real fix is **onset gating** (spectral
-  flux in the worklet → only count votes ~1.5s after an attack).
+- **Residual ring — SOLVED (2026-09-16)**: onset detection upgraded from
+  hop-RMS to HF-band spectral flux in `worklet-processor.js`
+  (`makeOnsetDetector`, RBJ 2kHz highpass + 4×-baseline + 2×-hop-jump +
+  floors + refractory). Screens already gated votes to ~1.8s after
+  `mic.lastOnset`; now ring alone can't fire onsets, and restrums over
+  loud ring still fire. The selftest's Em7-ring KNOWN case is retired —
+  suite is 130 pass / 0 fail / 0 known.
 - **Voicing-template verification (v2, recommended over NMF)** — the poll
   knows `voicingsFor(chord)[0]`; require a peak within ~±0.7 semitone of
   each expected fundamental. Kills sympathetic-ring false-accepts and gives

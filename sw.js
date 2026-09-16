@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v2';  // + ear drills: interval, progression, high-low
+const CACHE = 'gv-v3';  // + HF-flux onset detector; residual-ring limit retired
 
 const ASSETS = [
   './',
