@@ -7,6 +7,7 @@ import { initPractice, endPractice } from './screens/practice.js';
 import { initTuner, suspendTuner } from './screens/tuner.js';
 import { initEar, suspendEar } from './screens/ear.js';
 import { initStrum, suspendStrum } from './screens/strum.js';
+import { initSongs, suspendSongs } from './screens/songs.js';
 import { initStats } from './screens/stats.js';
 import { initSettings } from './screens/settings.js';
 
@@ -22,6 +23,7 @@ function initTabs() {
     if (name !== 'practice') endPractice();
     if (name !== 'ear') suspendEar();
     if (name !== 'strum') suspendStrum();
+    if (name !== 'songs') suspendSongs();
   }));
 }
 
@@ -33,6 +35,7 @@ initPractice();
 initTuner();
 initEar();
 initStrum();
+initSongs();
 initStats();
 
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {

@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v3';  // + HF-flux onset detector; residual-ring limit retired
+const CACHE = 'gv-v4';  // + song mode screen; precache standards.js fix
 
 const ASSETS = [
   './',
@@ -21,6 +21,7 @@ const ASSETS = [
   'js/theory/voicings.js',
   'js/data/curated.js',
   'js/data/progressions.js',
+  'js/data/standards.js',
   'js/audio/engine.js',
   'js/audio/input.js',
   'js/audio/worklet-processor.js',
@@ -38,6 +39,7 @@ const ASSETS = [
   'js/screens/ear.js',
   'js/screens/progBuilder.js',
   'js/screens/strum.js',
+  'js/screens/songs.js',
   'js/screens/stats.js',
   'js/screens/settings.js',
 ];

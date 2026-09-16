@@ -463,6 +463,32 @@ export async function runAll(report = console.log) {
     ok(allOk, 'all preset progressions voice-lead (keys C/G/F)');
   }
 
+  // -- song mode: chart bar layout (pure helper, no DOM needed) --
+  report('song mode');
+  const songs = await import('../js/screens/songs.js');
+  { // Autumn Leaves: 34 slots → 32 cells; the C section's two half pairs
+    // (| Gm7 Gb7 | Fm7 E7 |) are the only split cells
+    const al = STANDARDS.find(x => x.id === 'autumn-leaves');
+    const cells = songs.barCells(al);
+    ok(cells.length === 32 &&
+      cells.flatMap(c => c.slots).length === al.bars.length &&
+      cells.filter(c => c.slots.length === 2).length === 2,
+      'barCells: Autumn Leaves → 32 cells, 2 split',
+      `cells=${cells.length} split=${cells.filter(c => c.slots.length === 2).length}`);
+  }
+  { // every standard: cells partition the slot list in order, ≤2 per cell —
+    // total beats (slots×4 minus halves) must equal cells×4
+    const allOk = STANDARDS.every(sd => {
+      const cells = songs.barCells(sd);
+      const flat = cells.flatMap(c => c.slots);
+      const beats = sd.bars.reduce((a, b) => a + (b.half ? 2 : 4), 0);
+      return cells.every(c => c.slots.length <= 2) &&
+        flat.length === sd.bars.length && flat.every((v, i) => v === i) &&
+        beats === cells.length * 4;
+    });
+    ok(allOk, 'every standard: cells partition slots in order');
+  }
+
   report(`\n${pass} passed, ${fail} failed` +
     (known ? `, ${known} known-limitation${known === 1 ? '' : 's'}` : ''));
   return { pass, fail };

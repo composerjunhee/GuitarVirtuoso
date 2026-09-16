@@ -1059,7 +1059,7 @@ input:focus-visible, select:focus-visible {
    bar counts in. JS re-adds .tick each beat to restart the pulse; with
    prefers-reduced-motion the number just swaps (no animation is defined).
    pointer-events:none keeps the End button reachable mid-count-in. */
-#stRun, #practiceRun { position: relative; }
+#stRun, #practiceRun, #sgRun { position: relative; }
 .countin {
   position: absolute;
   inset: 0;
@@ -1086,5 +1086,105 @@ input:focus-visible, select:focus-visible {
          text-shadow: 0 0 36px var(--accent-glow); }
   35%  { opacity: 1; }
   100% { transform: scale(1); text-shadow: none; }
+}
+
+/* ============ song mode (#songsBody, js/screens/songs.js) ============
+   A scrolling chord chart: one .chart-cell per bar (a `half` pair splits
+   into two .chart-sym slots), 4 mini pips tracking the beat inside the
+   current cell. The chart lives in its own scroll box so auto-centering
+   never moves the page. */
+.sg-nowbar { text-align: center; }
+.sg-now {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.sg-fb { min-height: 22px; font-size: 15px; margin: 2px 0 10px; }
+
+.chart-scroll {
+  position: relative;            /* cells' offsetParent — offsetTop math */
+  max-height: min(52vh, 430px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg2);
+  padding: 8px;
+  scroll-behavior: smooth;
+}
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+@media (max-width: 480px) {
+  .chart-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.chart-cell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  min-height: 54px;
+  padding: 7px 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  transition: border-color .15s ease, background .15s ease, opacity .3s ease;
+}
+.chart-cell.past { opacity: .42; }
+.chart-cell.cur {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);        /* accent ring, like .pat-card.sel */
+}
+.chart-syms {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+.chart-sym {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  padding: 2px 1px;
+  border-radius: 5px;
+  white-space: nowrap;
+  transition: color .12s ease, background .12s ease;
+}
+/* sounding chord inside the current cell — the .snd look from .beat-cell */
+.chart-sym.snd {
+  color: var(--accent);
+  background: rgba(232, 163, 61, .16);
+}
+/* mic-scoring verdicts, painted at the slot's end */
+.chart-sym.good { color: var(--good); }
+.chart-sym.miss { color: var(--bad); opacity: .85; }
+/* 4 mini pips inside the cell — the current beat fills accent */
+.chart-beats {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.chart-beats i {
+  width: 13px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+  transition: background .1s ease;
+}
+.chart-cell.cur .chart-beats i { background: rgba(232, 163, 61, .35); }
+.chart-beats i.now { background: var(--accent); }
+#sgResultBody { font-family: var(--mono); font-size: 14px; line-height: 1.9; }
+@media (prefers-reduced-motion: reduce) {
+  .chart-scroll { scroll-behavior: auto; }
+  .chart-cell, .chart-sym, .chart-beats i { transition: none; }
 }
 
