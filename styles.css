@@ -1,0 +1,1090 @@
+/* GuitarTutor — warm dark theme, same family as Photomat (#23201A).
+   Modern music-app pattern: one dark field + one loud accent. */
+:root {
+  --bg: #23201a;
+  --bg2: #2b2720;
+  --panel: #353026;   /* raised from #322d24 — clearer card/field separation */
+  --line: #4a4234;
+  --ink: #ece4d4;
+  --dim: #b4a88d;   /* was #a89a80 — lightened ~+1:1 contrast vs --bg/--panel for AA comfort */
+  --accent: #e8a33d;
+  --accent-ink: #1d1a14;
+  --accent-soft: rgba(232, 163, 61, .14);
+  --accent-glow: rgba(232, 163, 61, .24);
+  --good: #8fbf6a;                 /* persistent "correct" states */
+  --good-hot: #a5d97e;             /* transient success flash (feedback pop) */
+  --good-soft: rgba(143, 191, 106, .32);
+  --bad: #d96a5a;
+  /* SVG instrument palette — js/ui/fretboard.js, chordDiagram.js and
+     needle.js reference these as var(--…), so the drawings share the
+     theme's single source of truth instead of parallel hex literals. */
+  --fb-wood-a: #4b3b26;   /* fretboard top */
+  --fb-wood-mid: #40321f; /* gradient midpoint */
+  --fb-wood-b: #342a1c;   /* fretboard bottom */
+  --fb-edge: #221d14;
+  --fb-fret: #8a7d66;
+  --fb-inlay: #71634d;
+  --fb-string: #a89b84;
+  --fb-label: #a89a80;    /* old --dim value — SVG text stays a touch dimmer */
+  --fb-dim: #5c5443;      /* ghosted non-chord-tone dots / needle parked */
+  --fb-ring: rgba(20, 17, 12, .45);
+  --cd-box: #2b261e;      /* chord-diagram inset */
+  --cd-fret: #6a5f4c;
+  --gauge-face: #29241c;  /* tuner dial plate band */
+  --gauge-tick: #7a6f5c;
+  --gauge-tick-minor: #565045;
+  --shadow: 0 10px 28px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(236, 228, 212, .045);
+  --mono: 'Courier Prime', 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans KR', 'Pretendard', 'Noto Sans KR', system-ui, sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background:
+    radial-gradient(130% 80% at 50% -10%, #2b2620 0%, var(--bg) 58%) fixed,
+    var(--bg);
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-weight: 300;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+button { touch-action: manipulation; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: calc(10px + env(safe-area-inset-top, 0px))
+           calc(16px + env(safe-area-inset-right, 0px))
+           10px
+           calc(16px + env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+  background: rgba(35, 32, 26, .88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+}
+
+h1 {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+/* mini chord-diagram glyph, echoes icon.svg */
+h1::before {
+  content: '';
+  width: 17px;
+  height: 17px;
+  flex: none;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cg stroke='%23e8a33d' stroke-width='1.3'%3E%3Cpath d='M3.5 2v12M8 2v12M12.5 2v12M2 4h12M2 8h12M2 12h12'/%3E%3C/g%3E%3Ccircle cx='8' cy='8' r='2' fill='%23e8a33d'/%3E%3C/svg%3E")
+              center / contain no-repeat;
+}
+
+/* six tabs don't fit a phone; let the nav scroll sideways on one line
+   instead of wrapping the tab underlines into a second row */
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--dim);
+  font-family: var(--sans);
+  font-size: 15px;
+  min-height: 44px;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease;
+}
+.tab.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 500; }
+.tab:hover { color: var(--ink); }
+
+/* settings gear — a .tab so the router wires it, but it reads as a tool,
+   not a tab: fixed size, and its active state is a lit glyph instead of
+   the underline the worded tabs share */
+.settings-gear {
+  flex: none;
+  padding: 8px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.settings-gear svg { display: block; }
+.settings-gear.active {
+  color: var(--accent);
+  border-bottom-color: transparent;
+}
+
+/* ============ compact header (≤760px) ============
+   The six tabs stay up top at every width. On phones the header wraps to
+   two rows — brand glyph + settings gear on row 1, the tab strip
+   full-width on row 2. Six ~53px columns fit a 360px phone; under ~300px
+   (or with longer translations) the strip scrolls sideways, same as the
+   desktop .tabs rule already allows. */
+@media (max-width: 760px) {
+  header {
+    gap: 0 8px;
+    padding-bottom: 0;                  /* tab underlines sit on the hairline */
+  }
+  /* the wordmark can't fit beside the gear on row 1 — the h1 text drops
+     to zero size (still in the DOM, still announced by AT) and the
+     chord-grid glyph in ::before carries the brand alone */
+  h1 { font-size: 0; gap: 0; }
+  h1::before { width: 20px; height: 20px; }
+  .settings-gear { order: 2; margin-left: auto; }  /* glyph left, gear right */
+
+  .tabs {
+    order: 3;                           /* whole second row */
+    flex: 1 1 100%;
+    gap: 0;
+  }
+  .tabs .tab {
+    flex: 1 1 0;                        /* six even columns when they fit */
+    min-width: 44px;                    /* …else the row scrolls */
+    min-height: 44px;
+    padding: 8px 2px;
+    font-size: 12px;
+    font-weight: 400;                   /* same ≤14px bump as :where() below */
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;            /* graceful clip on long translations */
+  }
+  /* .tabs .tab above ties .tab.active's specificity and wins on order —
+     restate the active weight so the underline isn't the only cue */
+  .tabs .tab.active { font-weight: 500; }
+}
+
+main {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.screen { display: none; }
+.screen.active { display: block; animation: screen-in .22s ease-out; }
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .screen.active { animation: none; }
+}
+
+/* chips */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 8px 0;
+  overflow-x: auto;               /* long rows (12 roots) scroll instead of overflowing */
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.chip-row.wrap { flex-wrap: wrap; overflow-x: visible; }
+.chip-row.center { justify-content: center; flex-wrap: wrap; }
+.row-label { color: var(--dim); font-size: 13px; min-width: 44px; flex: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  color: var(--dim);
+  border-radius: 999px;
+  padding: 8px 14px;
+  min-height: 44px;               /* WCAG tap target */
+  flex: none;
+  font-family: var(--sans);
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s ease, background .15s ease, border-color .15s ease,
+              transform .1s ease, box-shadow .15s ease;
+}
+.chip:hover { color: var(--ink); border-color: var(--dim); }
+.chip:active { background: var(--panel); transform: scale(.96); }
+.chip.sel, .chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 500;
+  /* inset sheen, not an outer glow — chip-rows clip overflow-y for the
+     horizontal scroll, which would slice a drop shadow */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+.chip:disabled { cursor: default; }
+/* quiz-answer verdicts (ear.js marks via inline style today; classes let a
+   later refactor drop the inline styles) */
+.chip.right { border-color: var(--good); color: var(--good); }
+.chip.wrong { border-color: var(--bad);  color: var(--bad); }
+
+/* 12-pc root picker (rootPicker in js/ui/components.js): 7 naturals on
+   row 1, 5 accidentals on row 2 centered over the gaps like black keys.
+   14 columns → every chip spans 2; JS sets each chip's grid-column. The
+   whole picker always fits the container width — no scrolling. This rule
+   sits after .chip-row so display:grid wins on containers that keep the
+   chip-row class (its wrap/center variants only touch flex properties
+   that a grid ignores). */
+.root-grid {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  gap: 6px 4px;
+  width: 100%;
+  flex: 1;                      /* fills a label row when nested in .chip-row */
+  overflow-x: visible;
+}
+.root-grid .chip {
+  padding-left: 6px;            /* columns size the chips — trim the side */
+  padding-right: 6px;           /* padding so 2-char spellings still fit */
+}
+
+/* buttons */
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 8px;
+  padding: 11px 20px;
+  min-height: 44px;
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 3px 14px var(--accent-glow);
+  transition: filter .15s ease, opacity .15s ease, transform .1s ease,
+              box-shadow .15s ease;
+}
+.primary:hover { filter: brightness(1.08); }
+.primary:active { filter: brightness(.94); transform: scale(.98); }
+.primary.big { padding: 12px 28px; font-size: 17px; }
+.primary:disabled { opacity: 0.45; cursor: default; box-shadow: none; }
+
+.ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--dim);
+  border-radius: 8px;
+  padding: 10px 16px;
+  min-height: 44px;
+  font-family: var(--sans);
+  font-size: 14px;
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, transform .1s ease;
+}
+.ghost:hover { color: var(--ink); border-color: var(--dim); }
+.ghost:active { transform: scale(.98); }
+
+.row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.hint { color: var(--dim); font-size: 13px; }
+
+/* weight 300 reads too thin for ≤14px UI text on this dark field — bump to
+   400. :where() keeps specificity at zero so .chip.sel's 500 still wins. */
+:where(.hint, .row-label, .chip, .ghost, .banner, .notes-line, .heard,
+       .freq, .stat-acc, .gt-select, .gt-input,
+       #resultBody, #earResultBody) { font-weight: 400; }
+/* readouts that tick digits — keep columns from jittering */
+.cents, .freq, .stat-acc { font-variant-numeric: tabular-nums; }
+
+input[type=range] {
+  accent-color: var(--accent);
+  height: 40px;                   /* fatter thumb/track hit area on touch */
+  min-width: 140px;
+  vertical-align: middle;
+  cursor: pointer;
+}
+
+/* shared form controls (was progBuilder's SEL_CSS / INPUT_CSS strings) */
+.gt-select {
+  background: var(--bg2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-height: 40px;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+.gt-input {
+  background: var(--bg2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+  min-height: 40px;
+  font-family: var(--sans);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+/* the global :focus-visible outline already covers these; the border
+   tint makes the ring feel warmer on dark inputs */
+.gt-select:focus-visible, .gt-input:focus-visible,
+input:focus-visible, select:focus-visible {
+  border-color: var(--accent);
+}
+/* progression pickers are dropdowns: fill the rest of the label row but
+   never overflow the card on narrow phones */
+.chip-row > .gt-select { flex: 1; min-width: 0; max-width: 100%; }
+
+/* library */
+.picker { margin-bottom: 14px; }
+.library-body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .library-body { grid-template-columns: 1fr; }
+}
+
+.chord-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  text-align: center;
+}
+.chord-title {
+  font-family: var(--mono);
+  font-size: 34px;
+  margin: 0 0 8px;
+  color: var(--accent);
+}
+.chord-title.huge { font-size: 64px; }
+
+.chord-diagram { display: flex; justify-content: center; }
+.chord-diagram svg {
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, .14);
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.voicing-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+  font-family: var(--mono);
+  color: var(--dim);
+}
+.chord-panel .row { justify-content: center; }
+
+.board-panel { min-width: 0; }
+.board {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.board svg { width: 100%; height: auto; display: block; }
+
+/* fretboard input affordance — classes are set in js/ui/fretboard.js */
+.fb-hit { cursor: pointer; }
+.fb-cell:hover, .fb-open:hover { fill: var(--accent-soft); }
+.fb-hit:active { fill: rgba(232, 163, 61, .28); }
+
+/* narrow screens: keep cells tappable by letting the board scroll sideways
+   instead of shrinking the whole SVG to phone width */
+@media (max-width: 760px) {
+  .board { overflow-x: auto; overflow-y: hidden; }
+  .board svg { min-width: 660px; }
+}
+
+.notes-line { color: var(--dim); font-family: var(--mono); font-size: 13px; text-align: center; }
+
+/* practice */
+.setup-card, #practiceRun, #practiceResult {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.setup-card .big { width: 100%; margin-top: 14px; }
+#progOpts input[type=range] { flex: 1; }
+
+.run-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+/* session progress track — sits under .run-top. JS can fill it either by
+   sizing the <i> (i.style.width = pct) or by setting --run-pct on the bar;
+   today the screens only emit n/10 text, so it renders as an empty track. */
+.run-bar {
+  height: 3px;
+  margin: -2px 0 14px;
+  background: rgba(0, 0, 0, .28);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.run-bar > i {
+  display: block;
+  height: 100%;
+  width: var(--run-pct, 0%);
+  background: var(--accent);
+  border-radius: inherit;
+  transition: width .3s ease;
+}
+.run-body { text-align: center; }
+.run-body .row { justify-content: center; }
+.feedback { min-height: 28px; font-size: 18px; margin: 6px 0; }
+.feedback.good { color: var(--good); }
+.feedback.bad { color: var(--bad); }
+/* success "ding": brief scale+glow flash, then settles back to --good.
+   Re-triggers each time a screen re-applies the .good class. */
+@media (prefers-reduced-motion: no-preference) {
+  .feedback.good { animation: fb-good-pop .28s ease-out; }
+}
+@keyframes fb-good-pop {
+  0%   { transform: scale(.9); opacity: 0; }
+  45%  { transform: scale(1.05); opacity: 1;
+         color: var(--good-hot);
+         text-shadow: 0 0 22px var(--good-soft); }
+  100% { transform: scale(1); text-shadow: none; }
+}
+.heard { min-height: 22px; color: var(--dim); font-family: var(--mono); font-size: 14px; }
+.heard .hit { color: var(--good); }
+.heard .miss { color: var(--bad); }
+
+#practiceResult h2 { margin-top: 0; }
+#resultBody { font-family: var(--mono); font-size: 14px; line-height: 1.9; }
+#resultBody .weak { color: var(--bad); }
+
+/* tuner */
+.gauge svg {
+  width: 100%; max-width: 420px; display: block; margin: 10px auto;
+  transition: filter .3s ease;
+}
+.tuner-readout {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 18px;
+  margin: 6px 0 14px;
+}
+.note-name {
+  font-family: var(--mono); font-size: 56px; color: var(--accent);
+  transition: color .25s ease;
+}
+.note-name.in-tune { color: var(--good); }
+.cents { font-size: 20px; color: var(--dim); transition: color .25s ease; }
+.freq { font-size: 14px; color: var(--dim); transition: color .25s ease; }
+.note-name.in-tune ~ .cents { color: var(--good); }
+#screen-tuner { text-align: center; }
+#screen-tuner .big { margin-top: 18px; }
+/* whole-gauge glow while in tune — the dial soft-lights green instead of
+   only the note glyph changing colour */
+#screen-tuner:has(.note-name.in-tune) .gauge svg {
+  filter: drop-shadow(0 0 18px var(--good-soft));
+}
+#screen-tuner:has(.note-name.in-tune) .level-bar { background: var(--good); }
+/* input level meter — thin bar so the user can see the mic is alive */
+.level-wrap {
+  width: 100%; max-width: 280px; height: 6px; margin: 10px auto 0;
+  background: var(--bg2); border-radius: 3px; overflow: hidden;
+}
+.level-bar {
+  height: 100%; width: 0;
+  background: var(--accent); border-radius: 3px;
+  transition: width .06s linear, background .25s ease;
+}
+
+/* mic banner — default is the error toast; .info is the neutral variant
+   for non-error notices (components.js showBanner doesn't pass a variant
+   yet — callers add it via el.className). */
+.banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: var(--bad);
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 10px 18px;
+  font-size: 14px;
+  z-index: 50;
+  max-width: 90vw;
+}
+.banner.info {
+  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel));
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* ============ progression builder (js/screens/progBuilder.js) ============
+   These classes replace the module's old style.cssText strings 1:1. */
+.prog-panel {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 6px 12px 10px;
+  margin-top: 8px;
+}
+.chip-row.prog-row { margin: 6px 0 2px; }        /* a saved progression line */
+.prog-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink);
+}
+.prog-syms { margin: 0 0 6px; }                  /* "C · G · Am · F (in C)" */
+.prog-new { margin-top: 6px; }
+.prog-editor {                                   /* draft box, separated by a hairline */
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  padding-top: 10px;
+}
+.chip-row.prog-bar { margin: 6px 0; }            /* one bar: degree + quality + moves */
+.prog-sym { min-width: 56px; }                   /* live chord-symbol preview */
+.chip-row.prog-foot { margin-top: 8px; }         /* add-bar/preview/save/cancel */
+.prog-editor .chip:disabled { opacity: .35; }    /* dead ↑/↓/✕ buttons */
+
+/* ============ stats screen (#statsBody, js/screens/stats.js) ============ */
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.stat-row.weak { border-color: rgba(217, 106, 90, .5); }
+.stat-name { font-family: var(--mono); font-size: 16px; color: var(--accent); }
+.stat-row.weak .stat-name { color: var(--bad); }
+.stat-bar {
+  height: 8px;
+  min-width: 56px;
+  background: rgba(0, 0, 0, .28);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.stat-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+.stat-bar.low > i { background: var(--bad); }
+.stat-acc {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--dim);
+  min-width: 44px;
+  text-align: right;
+}
+/* Leitner box indicator: 5 dots, filled up to the card's box level */
+.box-dots { display: inline-flex; gap: 4px; align-items: center; }
+.box-dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--dim);
+}
+.box-dots i.on { background: var(--accent); border-color: var(--accent); }
+/* summary + empty state are cards too — same token set as .setup-card */
+.stats-summary, .stats-empty {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 20px;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 14px;
+}
+@media (max-width: 560px) {
+  .stat-row { grid-template-columns: minmax(56px, auto) 1fr auto; }
+  .stat-row .box-dots { grid-column: 2; }        /* dots tuck under the bar */
+}
+
+/* ============ strum trainer (#strumBody, js/screens/strum.js) ============ */
+.strum-pat {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 14px 0;
+}
+.strum-slot {
+  width: 34px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 20px;
+  font-weight: 700;
+  user-select: none;
+  margin: 2px;
+  transition: background .06s ease, transform .06s ease;
+}
+/* breathing room after each beat (slots are 8th-note pairs) */
+.strum-slot:nth-child(2n) { margin-right: 12px; }
+.strum-slot[data-ch="."] { color: var(--line); }
+.strum-slot.cur {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  transform: translateY(-3px);
+  animation: strum-pulse .7s ease-in-out infinite;
+}
+/* (.strum-slot.hit/.miss were removed — strum.js never adds them; verdicts
+   live in the history dots below) */
+@keyframes strum-pulse {
+  50% { box-shadow: 0 0 0 5px var(--accent-soft); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .strum-slot.cur {
+    animation: none;
+    box-shadow: 0 0 0 3px var(--accent-soft);    /* static halo instead */
+  }
+}
+/* per-bar history strip — strum.js still paints these inline today; these
+   rules are the real styles so the inline cssText can migrate here. */
+.strum-hist {
+  display: flex;
+  justify-content: center;
+  min-height: 14px;
+  margin: 4px 0;
+}
+.strum-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin: 2px;
+  display: inline-block;
+}
+.strum-dot.hit { background: var(--good); }
+.strum-dot.miss { background: var(--bad); }
+
+/* progression mode: the big chord title sits beside the beat strip — the
+   change pip carries the next chord's symbol, so "what" and "when" read
+   as one unit */
+.chord-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.chord-line .chord-title { margin-bottom: 4px; }
+/* bar maps: two adjacent beat strips — strip A maps the current bar,
+   strip B (.future) previews the next bar smaller and dimmer. A cell
+   where a chord STARTS widens into a .chip holding its symbol:
+   .snd sounding now (accent), .up starting later this bar (hollow
+   dashed), .past already over (dim, no fill). A bar with no start stays
+   all pips — no label means the previous chord still sounds (Chordify
+   rule). .now = sounding-beat pip, fills as beats pass. Used by strum
+   (#stBeat/#stBeatB in .beat-maps) and practice (#nextBeat). */
+.beat-maps {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.beat-maps[hidden] { display: none; }
+.chord-line .beat-maps { align-self: center; }   /* not the text baseline */
+.beat-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--line);
+  flex: none;
+}
+.beat-strip {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+}
+.beat-strip[hidden] { display: none; }
+/* next-bar preview: smaller, dimmer — every chip in it is future (.up) */
+.beat-strip.future {
+  transform: scale(.85);
+  transform-origin: left center;
+  opacity: .55;
+}
+.beat-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg2);
+  font-style: normal;              /* cells are <i> elements */
+  transition: background .12s ease, border-color .12s ease;
+}
+.beat-cell.now { background: var(--dim); border-color: var(--dim); }
+/* a chord starts on this beat — the cell widens into a labelled chip */
+.beat-cell.chip {
+  width: auto;
+  min-width: 20px;
+  height: auto;
+  padding: 1px 7px 2px;
+  border-radius: 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.15;
+}
+/* sounding now — the accent look the old .chg chip had */
+.beat-cell.snd {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+/* starts later this bar — hollow/dashed accent, a promise not a sound */
+.beat-cell.up {
+  color: var(--accent);
+  background: transparent;
+  border-style: dashed;
+  border-color: var(--accent);
+}
+/* started and ended within this bar — dim, no fill */
+.beat-cell.past {
+  color: var(--dim);
+  background: transparent;
+  border-color: var(--line);
+}
+/* current beat IS the sounding chord's start — full-accent arrival */
+.beat-cell.now.snd {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+/* practice run: the strip row sits under the big target chord */
+.next-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 2px 0 6px;
+}
+.next-row[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .beat-cell { transition: none; }
+}
+/* ============ ear training extras (#earBody) ============ */
+/* ear.js styles #earResultBody inline today; these hooks let the markup
+   drop the inline style later (same look as #resultBody). */
+#earResultBody { font-family: var(--mono); font-size: 14px; line-height: 1.9; }
+#earResultBody .weak { color: var(--bad); }
+#earScore { color: var(--dim); }
+#earStreak { color: var(--dim); }
+
+/* ============ settings screen (#settingsBody, js/screens/settings.js) ============
+   Labeled rows — name + one-line description on the left, segmented chips
+   on the right — replacing the old cryptic header icon toggles. Same card
+   token set as .setup-card / .stats-summary. */
+.set-title {
+  max-width: 560px;
+  margin: 2px auto 14px;
+  font-size: 20px;
+  font-weight: 500;
+}
+.set-list {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+}
+.set-label { min-width: 0; }
+.set-name { font-size: 15px; }
+.set-desc { display: block; margin: 4px 0 0; }
+.set-row .chip-row { margin: 0; flex: none; }
+@media (max-width: 560px) {
+  /* label above, chips below — long translations stay readable */
+  .set-row { flex-direction: column; align-items: stretch; }
+  .set-row .chip-row { justify-content: flex-end; }
+}
+
+/* ============ picker upgrades ============ */
+
+/* root grid "black keys": the row-2 accidentals (rootPicker adds .acc) read
+   as recessed, darker keys — --bg fill + inset shade, slightly quieter
+   type. Height stays 44px (tap target); only the face changes. */
+.root-grid .chip.acc {
+  background: var(--bg);
+  border-color: rgba(74, 66, 52, .55);       /* --line, dimmed */
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .38);
+  font-size: 13px;
+}
+.root-grid .chip.acc:hover { border-color: var(--dim); }
+.root-grid .chip.acc.sel {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+/* segmented control (.seg): 2–4 mutually-exclusive options joined into one
+   bordered pill. Segments are plain .chip buttons (built by segRow() in
+   components.js or static markup) so .sel still paints the accent fill. */
+.seg {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.seg .chip {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dim);
+  padding: 8px 4px;
+  white-space: normal;                       /* long labels wrap, centered */
+  text-align: center;
+  line-height: 1.15;
+}
+.seg .chip + .chip { border-left: 1px solid var(--line); }
+.seg .chip:hover { color: var(--ink); border-left-color: var(--line); }
+.seg .chip:active { transform: none; background: var(--panel); }
+.seg .chip.sel, .seg .chip.active {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-left-color: var(--accent);          /* divider melts into the fill */
+  box-shadow: none;
+}
+@media (max-width: 400px) {
+  .seg .chip { font-size: 12px; padding: 8px 2px; }
+}
+
+/* labeled chip groups (groupedChips): tiny dim family header on its own
+   line, then that group's chips in a wrapping row */
+.picker-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+}
+.qgroup .chip-row { margin: 0 0 6px; }
+.picker-label {
+  display: block;
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  margin: 4px 0 2px;
+}
+
+/* ear quality answers: uniform tile grid instead of ragged wrap pills.
+   #earAnswers keeps .chip children so markAnswers' .right/.wrong paint. */
+.ans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+  overflow-x: visible;
+}
+.ans-grid .chip { white-space: normal; }
+
+/* strum pattern radio-cards: name + a miniature glyph strip of the slot
+   pattern (D/U/· in compact .strum-slot form). 2 cols on phones, 3 wider. */
+.pat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  margin: 8px 0;
+}
+@media (min-width: 560px) {
+  .pat-grid { grid-template-columns: repeat(3, 1fr); }
+}
+.pat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 44px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 4px 9px;
+  font-family: var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease,
+              box-shadow .15s ease, transform .1s ease;
+}
+.pat-card:hover { border-color: var(--dim); }
+.pat-card:active { transform: scale(.98); }
+.pat-card.sel {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 1px var(--accent);       /* accent ring */
+}
+.pat-name { font-size: 13px; font-weight: 500; }
+.pat-card.sel .pat-name { color: var(--accent); }
+.pat-strip { display: flex; gap: 2px; max-width: 100%; }
+.pat-strip .strum-slot {
+  width: 10px;
+  height: 17px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border-radius: 3px;
+  font-size: 8px;
+  line-height: 1;
+}
+.pat-strip .strum-slot:nth-child(2n) { margin-right: 4px; }
+.pat-strip .strum-slot:last-child { margin-right: 0; }
+.pat-card.sel .pat-strip .strum-slot { border-color: rgba(232, 163, 61, .5); }
+
+/* BPM steppers: −/+ chips flanking the range input */
+.chip.bpm-step {
+  min-width: 44px;
+  padding: 8px 10px;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+}
+/* let the slider share one row with the steppers down to 320px */
+.bpm-row input[type=range] { flex: 1; min-width: 56px; }
+.bpm-row .mono { flex: none; }
+
+/* tab icons: small inline SVG beside the label on wide headers, stacked
+   above the (smaller) label once the tabs become even phone columns */
+.tab svg { flex: none; }
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+@media (max-width: 760px) {
+  .tabs .tab {
+    flex-direction: column;
+    gap: 3px;
+    padding: 5px 2px;
+    font-size: 10px;
+  }
+  .tabs .tab svg { width: 15px; height: 15px; }
+}
+
+/* ============ count-in overlay (strum run + timed practice) ============
+   A huge beat number floats over the run card while the metronome's first
+   bar counts in. JS re-adds .tick each beat to restart the pulse; with
+   prefers-reduced-motion the number just swaps (no animation is defined).
+   pointer-events:none keeps the End button reachable mid-count-in. */
+#stRun, #practiceRun { position: relative; }
+.countin {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: clamp(72px, 22vw, 128px);
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(35, 32, 26, .78);          /* --bg, translucid */
+  border-radius: 12px;
+  user-select: none;
+  pointer-events: none;
+}
+/* display:flex above would override the UA's [hidden] rule — restate it */
+.countin[hidden] { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .countin.tick { animation: countin-pop .55s ease-out; }
+}
+@keyframes countin-pop {
+  0%   { transform: scale(1.3); opacity: 0;
+         text-shadow: 0 0 36px var(--accent-glow); }
+  35%  { opacity: 1; }
+  100% { transform: scale(1); text-shadow: none; }
+}
+

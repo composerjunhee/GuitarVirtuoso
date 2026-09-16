@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Write(**)",
+      "Exec(node)",
+      "Exec(npm)",
+      "Exec(curl)",
+      "Exec(python)",
+      "Exec(C:\\Users\\user\\AppData\\Local\\Python\\bin\\python.exe)",
+      "Exec(git status)",
+      "Exec(git diff)",
+      "Exec(git log)",
+      "Exec(git show)",
+      "Exec(git add)",
+      "Exec(git commit)"
+    ],
+    "deny": [
+      "Exec(rm)",
+      "Exec(sudo)"
+    ]
+  }
+}

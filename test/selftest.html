@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>GuitarTutor selftest</title>
+  <style>
+    body { background: #23201a; color: #ece4d4; font-family: monospace;
+           padding: 20px; }
+    #out { white-space: pre-wrap; line-height: 1.6; }
+    .fail { color: #d96a5a; }
+  </style>
+</head>
+<body>
+  <h1>GuitarTutor selftest</h1>
+  <div id="out">running…</div>
+  <script type="module">
+    import { runAll } from './selftest.js';
+    const out = document.getElementById('out');
+    const lines = [];
+    runAll(line => {
+      lines.push(line);
+      out.textContent = lines.join('\n');
+    }).then(r => {
+      document.title = r.fail ? `FAIL ${r.fail}` : 'ALL PASS';
+    });
+  </script>
+</body>
+</html>

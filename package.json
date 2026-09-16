@@ -1,0 +1,11 @@
+{
+  "name": "guitartutor",
+  "private": true,
+  "type": "module",
+  "description": "Chord library, fretboard trainer, and tuner. Vanilla JS PWA, no build step.",
+  "scripts": {
+    "serve": "python serve.py",
+    "test": "node test/selftest.js",
+    "icons": "python tools/make_icon.py"
+  }
+}
