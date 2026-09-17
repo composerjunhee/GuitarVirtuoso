@@ -645,6 +645,23 @@ export async function runAll(report = console.log) {
       hc.bars[0].off === 0 && hc.bars[0].q === 'm',
       'Hotel California bar 0 = Bm');
   }
+  { // spot-check: Freddie Freeloader is NOT a generic blues — no quick IV
+    // in bar 2 (Bb7 all four bars), and the tag is the backdoor bVII7
+    // (Ab7) in bars 11–12, not V–I
+    const ff = STANDARDS.find(x => x.id === 'freddie-freeloader');
+    ok(!!ff && ff.bars[1].off === 0 && ff.bars[1].q === '7' &&
+      ff.bars[10].off === 10 && ff.bars[10].q === '7' &&
+      ff.bars[11].off === 10 && ff.bars[11].q === '7',
+      'Freddie Freeloader: no quick IV, backdoor Ab7 tag');
+  }
+  { // spot-check: Summertime bar 12 is the II7–V7 (D7 G7) into C —
+    // slots 14/15 of the chart (line 3's last bar, a half pair)
+    const st = STANDARDS.find(x => x.id === 'summertime');
+    ok(!!st && st.bars[14].half === true && st.bars[14].off === 5 &&
+      st.bars[14].q === '7' && st.bars[15].half === true &&
+      st.bars[15].off === 10 && st.bars[15].q === '7',
+      'Summertime bar 12 = D7 G7');
+  }
 
   report(`\n${pass} passed, ${fail} failed` +
     (known ? `, ${known} known-limitation${known === 1 ? '' : 's'}` : ''));

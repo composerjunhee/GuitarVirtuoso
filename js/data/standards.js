@@ -174,10 +174,11 @@ export const STANDARDS = [
       { off: 0, q: 'm7', half: true }, { off: 0, q: '7', half: true },
       // | Dm7 | F7 | Bm7b5 | E7 |
       { off: 5, q: 'm7' }, { off: 8, q: '7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
-      // | Am7 | Bm7b5 E7 | Am7 | G7 |
+      // | Am7 | Bm7b5 E7 | Am7 | D7 G7 |
       { off: 0, q: 'm7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
-      { off: 0, q: 'm7' }, { off: 10, q: '7' },
+      { off: 0, q: 'm7' },
+      { off: 5, q: '7', half: true }, { off: 10, q: '7', half: true },
       // | Cmaj7 | Bm7b5 E7 | Am7 | Bm7b5 E7 |
       { off: 3, q: 'maj7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
@@ -278,11 +279,11 @@ export const STANDARDS = [
       { off: 0, q: 'maj7', half: true }, { off: 9, q: 'm7', half: true },
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
-      // B: | Bbm7 | Eb7 | Abmaj7 | % | Am7 | D7 F7 | Gm7 C7 | Fm7 Bb7 |
+      // B: | Bbm7 | Eb7 | Abmaj7 | % | Am7 | D7 F7 | Gm7b5 C7 | Fm7 Bb7 |
       { off: 7, q: 'm7' }, { off: 0, q: '7' }, { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
       { off: 6, q: 'm7' },
       { off: 11, q: '7', half: true }, { off: 2, q: '7', half: true },
-      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 4, q: 'm7b5', half: true }, { off: 9, q: '7', half: true },
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       // A: final (2nd-ending shape)
       { off: 0, q: 'maj7' },
@@ -400,13 +401,14 @@ export const STANDARDS = [
     ],
   },
   {
-    // 12-bar blues in Bb — no ii–V; the tag is plain V–IV–I–V.
+    // 12-bar blues in Bb — famously NO quick IV (Bb7 all four bars) and no
+    // ii–V; the tag is the signature backdoor bVII7 (Ab7), not V–I.
     id: 'freddie-freeloader', label: 'Freddie Freeloader', genre: 'jazz', key: 10,
     bars: [
-      // | Bb7 | Eb7 | Bb7 | Bb7 | Eb7 | Eb7 | Bb7 | Bb7 | F7 | Eb7 | Bb7 | F7 |
-      { off: 0, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
+      // | Bb7 | Bb7 | Bb7 | Bb7 | Eb7 | Eb7 | Bb7 | Bb7 | F7 | Eb7 | Ab7 | Ab7 |
+      { off: 0, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
-      { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
+      { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 10, q: '7' }, { off: 10, q: '7' },
     ],
   },
 
@@ -497,6 +499,29 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
     ],
   },
+  {
+    // The 4-bar loop in Em, four passes — verse and chorus both ride it.
+    id: 'zombie', label: 'Zombie', genre: 'rock', key: 4, minor: true,
+    bars: [
+      // | Em | C | G | D | ×4
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // The famous loop in the capo-2 Em shapes (the record sounds F#m):
+    // Em7–G–Dsus4–A7sus4, four passes.
+    id: 'wonderwall', label: 'Wonderwall', genre: 'rock', key: 4, minor: true,
+    bars: [
+      // | Em7 | G | Dsus4 | A7sus4 | ×4
+      { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
+      { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
+      { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
+      { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
+    ],
+  },
 
   // ---------- blues ----------
 
@@ -519,6 +544,18 @@ export const STANDARDS = [
       { off: 0, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
+    ],
+  },
+  {
+    // 12-bar minor blues in Bm — the signature bVImaj7 (Gmaj7) in bar 9
+    // and a V7 turnaround. (The record sometimes ends on Em7 — V7 kept.)
+    id: 'the-thrill-is-gone', label: 'The Thrill Is Gone', genre: 'blues',
+    key: 11, minor: true,
+    bars: [
+      // | Bm7 | Em7 | Bm7 | Bm7 | Em7 | Em7 | Bm7 | Bm7 | Gmaj7 | F#7 | Bm7 | F#7 |
+      { off: 0, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+      { off: 5, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'm7' }, { off: 7, q: '7' },
     ],
   },
 
@@ -623,9 +660,20 @@ export const STANDARDS = [
       // | C | F | G | C | C | F | C | C |  (third pair, ends on C)
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
-      // "the answer, my friend…": | F | G | C | F | F | G | C | C |
-      { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      // "the answer, my friend…": | F | G | C | Am | F | G | C | C |
+      { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 9, q: 'm' },
       { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // The chorus loop in G, played twice — "country roads, take me home".
+    id: 'country-roads', label: 'Take Me Home, Country Roads', genre: 'folk', key: 7,
+    bars: [
+      // | G | D | Em | C | G | D | C | G | ×2
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
   },
 ];
