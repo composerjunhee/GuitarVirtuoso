@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v5';  // + fretboard game, 33-song catalog with genre optgroups
+const CACHE = 'gv-v6';  // + strict characteristic-tone gate in chord detect
 
 const ASSETS = [
   './',

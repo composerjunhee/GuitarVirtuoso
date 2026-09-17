@@ -10,7 +10,7 @@
 import { renderPluck, renderStrum, playNote } from '../js/audio/pluck.js';
 import { detectPitch } from '../js/audio/pitch.js';
 import { makeOnsetDetector } from '../js/audio/worklet-processor.js';
-import { profileFromSpectrum, matchChord } from '../js/audio/chordDetect.js';
+import { profileFromSpectrum, matchChord, charPcs } from '../js/audio/chordDetect.js';
 import { voicingsFor, voicingPcs, voiceLead } from '../js/theory/voicings.js';
 import { parseSymbol, chordSymbol, chordPcs, QUALITIES, makeChord } from '../js/theory/chords.js';
 import { STRINGS, midiToFreq, freqToMidi, midiToPc } from '../js/theory/notes.js';
@@ -288,6 +288,78 @@ export async function runAll(report = console.log) {
       SR, 1.6, mulberry32(49), { sympatheticDb: -20 });
     ok(wins(pollWindows(buf, 'Em')) === 0, 'open-string ring rejects Em');
     ok(wins(pollWindows(buf, 'G')) === 0, 'open-string ring rejects G');
+  }
+
+  // -- strict extension: a bare triad must NOT pass an extended target --
+  // The tones beyond the base triad (7th/6th/9th…) are "characteristic":
+  // they need a real fundamental (fund ≥ FUND_STRONG ≈ 0.03), because a
+  // triad strum already rings them as overtones — B off the G string's
+  // 5th partial passes for Cmaj7's 7th, Bb near C's 7th partial for C7's
+  // ♭7. Those leaks carry fund ≈ 0–0.028; a really-played string carries
+  // ~1/6 of total weight, so it clears the gate by a wide margin.
+  report('strict extension (triad audio vs extended target)');
+  const DM_F = [-1, -1, 0, 2, 3, 1];
+  { // the reported bug: C audio must not verify as Cmaj7 or C7 — before
+    // the strict gate the leaked 7ths emptied `missing` and the ~0.85
+    // score carried it through
+    const cBuf = renderStrum(specsFromFrets(C_F), SR, 1.6, mulberry32(60));
+    ok(wins(pollWindows(cBuf, 'Cmaj7')) === 0, 'C audio rejects Cmaj7 target');
+    ok(wins(pollWindows(cBuf, 'C7')) === 0, 'C audio rejects C7 target');
+    ok(wins(pollWindows(cBuf, 'C6')) === 0, 'C audio rejects C6 target');
+  }
+  { // same cheat on the minor side: each triad vs its own m7
+    const em = renderStrum(specsFromFrets(EM_F), SR, 1.6, mulberry32(63));
+    ok(wins(pollWindows(em, 'Em7')) === 0, 'Em audio rejects Em7 target');
+    const am = renderStrum(specsFromFrets(AM_F), SR, 1.6, mulberry32(64));
+    ok(wins(pollWindows(am, 'Am7')) === 0, 'Am audio rejects Am7 target');
+    const dm = renderStrum(specsFromFrets(DM_F), SR, 1.6, mulberry32(65));
+    ok(wins(pollWindows(dm, 'Dm7')) === 0, 'Dm audio rejects Dm7 target');
+  }
+  { // positive controls: really-played extensions still verify
+    const cm7 = pollWindows(
+      renderStrum(specsFromFrets([-1, 3, 2, 0, 0, 0]), SR, 1.6, mulberry32(1234)),
+      'Cmaj7');
+    ok(wins(cm7) >= 3, 'Cmaj7 audio still hears Cmaj7', wbits(cm7));
+    const g7 = pollWindows(
+      renderStrum(specsFromFrets([3, 2, 0, 0, 0, 1]), SR, 1.6, mulberry32(1234)),
+      'G7');
+    ok(wins(g7) >= 3, 'G7 audio still hears G7', wbits(g7));
+    const dm7 = pollWindows(
+      renderStrum(specsFromFrets([-1, -1, 0, 2, 1, 1]), SR, 1.6, mulberry32(1234)),
+      'Dm7');
+    ok(wins(dm7) >= 3, 'Dm7 audio still hears Dm7', wbits(dm7));
+  }
+  { // charPcs picks the extension tones, not just the tail of the interval
+    // list: add9 interleaves its 9th inside the triad span; '11' stacks
+    // ♭7/9/11 over a bare fifth and every one of them is characteristic
+    const add9 = charPcs(parseSymbol('Cadd9'));
+    const dom11 = charPcs(parseSymbol('C11'));
+    const triad = charPcs(parseSymbol('C'));
+    ok(add9.size === 1 && add9.has(2) &&
+      dom11.has(10) && dom11.has(2) && dom11.has(5) && !dom11.has(7) &&
+      triad.size === 0, 'charPcs = tones beyond the base triad');
+  }
+  { // critical strings may not spend the one-dead-string allowance: a C
+    // fingering under a Cmaj7 template (x32000) differs in exactly the B
+    // string — the one carrying the maj7. (The synth's coincidental
+    // partials can mark that slot "ringing", so force the entry dead and
+    // exercise the allowance math directly on the real profile.)
+    const chord = parseSymbol('Cmaj7');
+    const need = chordPcs(chord.root, chord.quality);
+    const buf = renderStrum(specsFromFrets(C_F), SR, 1.6, mulberry32(69));
+    const prof = profileFromSpectrum(fftMagDb(buf, 8192, 3000).db, SR / 8192,
+      need, { frets: [-1, 3, 2, 0, 0, 0] });
+    const bStr = prof.strings.find(x => x.s === 4);
+    ok(bStr && bStr.exp === 11, 'voicing template tags expected pc per string');
+    const kill = s => prof.strings.map(x => x.s === s ? { ...x, ok: false } : x);
+    const deadCrit = matchChord({ ...prof, strings: kill(4) }, chord);
+    const deadFifth = matchChord({ ...prof, strings: kill(3) }, chord);
+    const deadBoth = matchChord({
+      ...prof, strings: prof.strings.map(x => (x.s === 2 || x.s === 3) ? { ...x, ok: false } : x),
+    }, chord);
+    ok(deadCrit.stringsOk === false, 'dead characteristic string → stringsOk false');
+    ok(deadFifth.stringsOk === true, 'one dead non-critical string still forgiven');
+    ok(deadBoth.stringsOk === false, 'two dead non-critical strings still fail');
   }
 
   // -- onset detector: HF spectral flux, driven hop-by-hop like the worklet --

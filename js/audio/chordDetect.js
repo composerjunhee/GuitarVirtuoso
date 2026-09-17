@@ -4,7 +4,7 @@
 // chord's pitch classes (+ bass note), sustained over time by the caller.
 
 import { freqToPc, freqToMidi, midiToPc, midiToFreq, STRINGS } from '../theory/notes.js';
-import { requiredPcs, bassPc } from '../theory/chords.js';
+import { requiredPcs, bassPc, QUALITIES } from '../theory/chords.js';
 
 const F_MIN = 65;          // below low E there is nothing useful
 const F_MAX = 1200;        // covers high-position voicing fundamentals; the
@@ -13,6 +13,10 @@ const PEAK_KEEP = 32;      // real guitars produce more peaks than synth;
                            // truncation hits quiet bass fundamentals first
 const PEAK_RANGE_DB = 42;  // drop peaks this far below the strongest
 const FLOOR_MARGIN = 10;   // noise floor = median + this many dB
+const FUND_STRONG = 0.03;  // characteristic tones need a real fundamental:
+                           // a played string carries ~1/6 of total weight,
+                           // a leaked overtone that dodged p.harm sits
+                           // well under this (the C→Cmaj7 B is ~0.02)
 
 // freqDb: Float32Array of dB magnitudes; binHz = sampleRate/fftSize.
 // `need` (optional Set of expected pitch classes) tunes harmonic handling:
@@ -147,7 +151,37 @@ function checkStrings(kept, voicing) {
       if (parts >= 2) { ok = true; heard = midiToPc(STRINGS[s] + f); }
       else if (bestCents <= 150) heard = best.pc;    // near miss ≈ wrong note
     }
-    out.push({ s, ok, heard });
+    // exp = the pc this string was supposed to play — matchChord uses it to
+    // tell a forgivable dead string from a critical one (the string that
+    // carried the chord's characteristic tone)
+    out.push({ s, ok, heard, exp: midiToPc(STRINGS[s] + f) });
+  }
+  return out;
+}
+
+// Characteristic tones: the pcs an extended chord adds beyond its base
+// triad — the 7th of maj7/7/m7, the 6th of '6', the 9th of add9/9, etc.
+// They're exactly what separates the chord from a plain triad, and exactly
+// what leaked overtones counterfeit (a C strum contains B via the G
+// string's 5th partial and Bb near C's 7th partial), so matchChord demands
+// stronger fundamental evidence for them. Empty for triads → no change.
+export function charPcs(chord) {
+  const q = QUALITIES[chord.quality];
+  const out = new Set();
+  if (!q || q.intervals.length <= 3) return out;
+  // The triad core fills three roles — root (0), a third-slot tone (3/4;
+  // sus chords substitute 2/5), a fifth-slot tone (6/7/8) — all inside the
+  // base octave. Everything else is extension color. A bare slice(3) would
+  // misfire: add9 interleaves its 9th at index 1, and '11' stacks ♭7/9/11
+  // over a bare fifth with no third at all.
+  const base = q.intervals.filter(i => i < 12);
+  let third = base.find(i => i === 3 || i === 4);
+  if (third === undefined) third = base.find(i => i === 2 || i === 5);
+  const fifth = base.find(i => i >= 6 && i <= 8);
+  const core = new Set([0, third, fifth].filter(x => x !== undefined));
+  for (const i of q.intervals) {
+    const s = ((i % 12) + 12) % 12;
+    if (!core.has(s)) out.add((chord.root + i) % 12);
   }
   return out;
 }
@@ -158,15 +192,20 @@ export function matchChord(profile, chord) {
   if (!profile) return { ok: false, score: 0, heard: new Set(), missing: [], bassOk: false };
   const need = requiredPcs(chord);
   const want = bassPc(chord);
+  const char = charPcs(chord);
   let covered = 0;
   const heard = new Set();
   const missing = [];
   for (const pc of need) {
     // a chord tone "sounds" if it holds ≥2% of profile energy AND has real
     // fundamental support — overtone-only pcs (the classic Am→C confusion:
-    // A's 7th partial sits near G) aren't evidence anyone played the note
+    // A's 7th partial sits near G) aren't evidence anyone played the note.
+    // Characteristic tones (the extension a plain triad lacks) need a
+    // stronger fundamental: their usual evidence IS a leaked partial whose
+    // parent decayed under the p.harm -14dB window, which is exactly the
+    // confusion this gate exists to kill.
     const sounded = profile.prof[pc] >= 0.02 &&
-      (!profile.fund || profile.fund[pc] >= 0.01);
+      (!profile.fund || profile.fund[pc] >= (char.has(pc) ? FUND_STRONG : 0.01));
     if (sounded) { covered += profile.prof[pc]; heard.add(pc); }
     else missing.push(pc);
   }
@@ -192,10 +231,19 @@ export function matchChord(profile, chord) {
   const ok = missing.length === 0 && score >= 0.68 && bassOk;
   const res = { ok, score, heard, missing, bassOk, foreign, bassPc: profile.bassPc };
   // voicing template was provided → per-string verdicts + a lenient gate:
-  // one dead string still counts (a real strum often leaves one faint)
+  // one dead string still counts (a real strum often leaves one faint) —
+  // but never a CRITICAL one. A string whose expected pc is characteristic
+  // is the difference between the target and its base triad: a C fingering
+  // under a Cmaj7 template differs in exactly the B string, and forgiving
+  // it would re-open the triad-passes-extension hole.
   if (profile.strings) {
     res.strings = profile.strings;
-    res.stringsOk = profile.strings.reduce((n, x) => n + (x.ok ? 0 : 1), 0) <= 1;
+    let slack = 0, crit = 0;
+    for (const x of profile.strings) {
+      if (x.ok) continue;
+      if (char.has(x.exp)) crit++; else slack++;
+    }
+    res.stringsOk = crit === 0 && slack <= 1;
   }
   return res;
 }
