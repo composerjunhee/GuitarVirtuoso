@@ -71,6 +71,10 @@ const STR = {
     'settings.leftyDesc': '지판과 코드 다이어그램을 왼손 연주용으로 좌우 반전합니다.',
     'settings.off': '끔',
     'settings.on': '켬',
+    'settings.guitarVol': '기타 음량',
+    'settings.guitarVolDesc': '연습·노래 탭에서 들려주는 코드·음 사운드의 크기입니다.',
+    'settings.metroVol': '메트로놈 음량',
+    'settings.metroVolDesc': '스트럼·노래 연습의 박자 클릭 소리 크기입니다.',
   },
   en: {
     'tab.library': 'Library',
@@ -141,6 +145,10 @@ const STR = {
     'settings.leftyDesc': 'Mirrors the fretboard and chord diagrams for left-handed playing.',
     'settings.off': 'Off',
     'settings.on': 'On',
+    'settings.guitarVol': 'Guitar volume',
+    'settings.guitarVolDesc': 'Level of the plucked chord/note playback in practice and songs.',
+    'settings.metroVol': 'Metronome volume',
+    'settings.metroVolDesc': 'Level of the beat click in strum and song practice.',
   },
 };
 

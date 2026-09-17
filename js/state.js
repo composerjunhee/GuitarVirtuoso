@@ -3,14 +3,29 @@
 
 const subs = [];
 
+// state.js is imported by pluck.js → audio modules → the Node selftest
+// harness, where localStorage doesn't exist — shim it so module load is safe.
+const ls = typeof localStorage !== 'undefined'
+  ? localStorage
+  : { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+
+const num = (k, dflt) => {
+  const v = parseFloat(ls.getItem(`gt.${k}`));
+  return Number.isFinite(v) ? v : dflt;
+};
+
 export const settings = {
-  flat: localStorage.getItem('gt.flat') === '1',
-  lefty: localStorage.getItem('gt.lefty') === '1',
+  flat: ls.getItem('gt.flat') === '1',
+  lefty: ls.getItem('gt.lefty') === '1',
+  // output levels 0..1.5 — metronome defaults louder than the plucked
+  // guitar so the beat cuts through a ringing chord
+  volGuitar: num('volGuitar', 0.7),
+  volMetro: num('volMetro', 1.0),
 };
 
 export function setSetting(k, v) {
   settings[k] = v;
-  localStorage.setItem(`gt.${k}`, v ? '1' : '0');
+  ls.setItem(`gt.${k}`, typeof v === 'number' ? String(v) : (v ? '1' : '0'));
   subs.forEach(fn => fn(k, v));
 }
 

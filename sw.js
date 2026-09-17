@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v11';  // + Falling Slowly
+const CACHE = 'gv-v12';  // guitar/metronome volume settings
 
 const ASSETS = [
   './',

@@ -3,6 +3,7 @@
 
 import { audioCtx } from './engine.js';
 import { STRINGS, midiToFreq } from '../theory/notes.js';
+import { settings } from '../state.js';
 
 const DAMP = 0.996;
 
@@ -148,7 +149,7 @@ function playBuffer(samples, when, gain = 0.45) {
   const src = ctx.createBufferSource();
   src.buffer = buf;
   const g = ctx.createGain();
-  g.gain.value = gain;
+  g.gain.value = gain * (settings.volGuitar ?? 1);
   src.connect(g).connect(ctx.destination);
   src.start(when);
 }

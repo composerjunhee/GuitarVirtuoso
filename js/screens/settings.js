@@ -45,6 +45,27 @@ function row(nameKey, descKey, control) {
   return r;
 }
 
+// slider + % readout for a numeric gt.* setting (volGuitar / volMetro)
+function volRow(nameKey, descKey, settingKey) {
+  const wrap = el('div', 'chip-row');
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = '0';
+  slider.max = '150';
+  slider.value = String(Math.round((settings[settingKey] ?? 1) * 100));
+  slider.setAttribute('aria-label', t(nameKey));
+  const pct = el('span', 'hint mono',
+    `${slider.value}%`);
+  pct.style.minWidth = '44px';
+  pct.style.textAlign = 'right';
+  slider.addEventListener('input', () => {
+    pct.textContent = `${slider.value}%`;
+    setSetting(settingKey, slider.value / 100);
+  });
+  wrap.append(slider, pct);
+  return row(nameKey, descKey, wrap);
+}
+
 function render() {
   if (!body) return;
   body.replaceChildren();
@@ -82,6 +103,11 @@ function render() {
   leftyRow.append(off, on);
   leftyChips = { off, on };
   list.append(row('settings.lefty', 'settings.leftyDesc', leftyRow));
+
+  // ---- output levels — 0..150% sliders, numeric gt.* settings read live
+  // by pluck.js (guitar) and metronome.js (click) on every play
+  list.append(volRow('settings.guitarVol', 'settings.guitarVolDesc', 'volGuitar'));
+  list.append(volRow('settings.metroVol', 'settings.metroVolDesc', 'volMetro'));
 
   body.append(list);
   sync();

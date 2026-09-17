@@ -3,6 +3,7 @@
 // visual sync should setTimeout(audioTime - currentTime).
 
 import { audioCtx } from './engine.js';
+import { settings } from '../state.js';
 
 export class Metronome {
   constructor(onBeat) {
@@ -41,7 +42,7 @@ export class Metronome {
     const osc = ctx.createOscillator();
     const g = ctx.createGain();
     osc.frequency.value = accent ? 1500 : 1000;
-    g.gain.setValueAtTime(accent ? 0.5 : 0.32, t);
+    g.gain.setValueAtTime((accent ? 0.5 : 0.32) * (settings.volMetro ?? 1), t);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
     osc.connect(g).connect(ctx.destination);
     osc.start(t);
