@@ -629,7 +629,9 @@ export async function runAll(report = console.log) {
   // (per-song quality/offset/half-pair/makeChord checks already ran in the
   // 'standards data' block above — it loops every catalog entry)
   report('song catalog');
-  ok(STANDARDS.length >= 50, `≥50 songs in catalog (got ${STANDARDS.length})`);
+  ok(STANDARDS.length >= 95, `≥95 songs in catalog (got ${STANDARDS.length})`);
+  ok(STANDARDS.every(sd => sd.bars.length > 0),
+    'every song has non-empty bars');
   ok(Object.keys(GENRES).every(g => GENRES[g].ko && GENRES[g].en),
     'GENRES labels all bilingual (ko+en)');
   ok(STANDARDS.every(sd => sd.genre && sd.genre in GENRES),
@@ -646,6 +648,21 @@ export async function runAll(report = console.log) {
     'every genre has ≥3 songs',
     Object.keys(GENRES).map(g =>
       `${g}=${STANDARDS.filter(sd => sd.genre === g).length}`).join(' '));
+  { // every bar resolves to a symbol that parseSymbol reads back — the
+    // same chordSymbol → parseSymbol round-trip the symbols block checks
+    const bad = [];
+    for (const sd of STANDARDS) {
+      sd.bars.forEach((b, i) => {
+        const ch = makeChord(sd.key + b.off, b.q);
+        const parsed = parseSymbol(chordSymbol(ch));
+        if (!parsed || parsed.root !== ch.root || parsed.quality !== ch.quality) {
+          bad.push(`${sd.id}[${i}]`);
+        }
+      });
+    }
+    ok(bad.length === 0, 'every bar round-trips chordSymbol → parseSymbol',
+      bad.slice(0, 8).join(','));
+  }
   for (const sd of STANDARDS) {
     // cells must partition slots in order and beats must equal 4×cells —
     // the same barCells contract the song-mode chart relies on

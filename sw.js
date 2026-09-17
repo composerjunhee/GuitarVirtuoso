@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v9';  // stats redesign: type filter + groups + heatmap
+const CACHE = 'gv-v10';  // 104-song catalog (pop/kpop/rock/folk expansion)
 
 const ASSETS = [
   './',

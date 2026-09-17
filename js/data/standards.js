@@ -699,6 +699,50 @@ export const STANDARDS = [
     ],
   },
 
+  {
+    // The A-section line-cliché played twice — the original
+    // Cm → Cm(maj7) → Cm7 → Cm6 descent is flattened to Cm7/Cm6 (no
+    // m(maj7) quality), then bVImaj7, iv and the iiø–V7 home. Bridge
+    // and C sections omitted.
+    id: 'my-funny-valentine', label: 'My Funny Valentine', genre: 'jazz',
+    key: 0, minor: true,
+    bars: [
+      // | Cm | Cm7 | Cm7 | Cm6 | Abmaj7 | Fm7 | Dm7b5 G7 | Cm |  ×2
+      { off: 0, q: 'm' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+      { off: 0, q: 'm6' }, { off: 8, q: 'maj7' }, { off: 5, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+      { off: 0, q: 'm6' }, { off: 8, q: 'maj7' }, { off: 5, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // 16 bars in Am — the Peggy Lee torch-blues form: i → iv with the
+    // V7 punch in bar 7 of each 8-bar phrase. Played twice.
+    id: 'fever', label: 'Fever (Peggy Lee)', genre: 'jazz', key: 9, minor: true,
+    bars: [
+      // | Am | Am | Dm | Am | Dm | Am | E7 | Am |  ×2
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
+      { off: 5, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '7' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
+      { off: 5, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '7' }, { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // The famous I–vi–ii–V in Eb (the doo-wop changes) — the whole tune
+    // rides this loop; four 4-bar passes shown.
+    id: 'blue-moon', label: 'Blue Moon', genre: 'jazz', key: 3,
+    bars: [
+      // | Ebmaj7 | Cm7 | Fm7 | Bb7 |  ×4
+      { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
+      { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
+      { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
+      { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
+    ],
+  },
+
   // ---------- classical ----------
 
   {
@@ -779,10 +823,10 @@ export const STANDARDS = [
     id: 'stand-by-me', label: 'Stand By Me', genre: 'pop', key: 9,
     bars: [
       // | A | F#m | D | E | ×4
-      { off: 0, q: '' }, { off: 11, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
-      { off: 0, q: '' }, { off: 11, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
-      { off: 0, q: '' }, { off: 11, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
-      { off: 0, q: '' }, { off: 11, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
   },
   {
@@ -856,6 +900,272 @@ export const STANDARDS = [
       { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 4, q: 'm' },
       { off: 7, q: '' },
       { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
+    ],
+  },
+
+  // ---------- more pop (well-attested charts) ----------
+
+  {
+    // A — the whole song rides the piano-arpeggio loop A–E–F#m–D
+    // (the E/G# bass flattened to E). Four passes.
+    id: 'someone-like-you', label: 'Someone Like You', genre: 'pop', key: 9,
+    bars: [
+      // | A | E | F#m | D |  ×4
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // Em (sounding pitch — the record plays capo-7 C/Am shapes). Verse
+    // sits | Em | C | D | D |; the chorus turns C–G–D–Em then C–G–D–D.
+    id: 'let-her-go', label: 'Let Her Go', genre: 'pop', key: 4, minor: true,
+    bars: [
+      // verse: | Em | C | D | D | ×2
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 10, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 10, q: '' }, { off: 10, q: '' },
+      // chorus: | C | G | D | Em | C | G | D | D |
+      { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // Am (capo-1 Am shapes; the record sounds Bbm). The whole song rides
+    // the 3-bar loop Am–G–C; five passes.
+    id: 'riptide', label: 'Riptide', genre: 'pop', key: 9, minor: true,
+    bars: [
+      // | Am | G | C |  ×5
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
+    ],
+  },
+  {
+    // G shapes (the record is Ab — capo 1). Verse and chorus both ride
+    // | G | Em | C | D |; four passes.
+    id: 'perfect', label: 'Perfect (Ed Sheeran)', genre: 'pop', key: 7,
+    bars: [
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // D — the verse is | D | D/F# | G | A | (D/F# flattened to D); the
+    // chorus ("take me into your loving arms") runs Bm–A–G–D then
+    // Em–A–D.
+    id: 'thinking-out-loud', label: 'Thinking Out Loud', genre: 'pop', key: 2,
+    bars: [
+      // verse ×2: | D | D | G | A |
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      // chorus: | Bm | A | G | D | Em | A | D | D |
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 2, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // Am shapes (the record is C#m — capo 4). The whole song rides
+    // | Am | C | G | F |; four passes.
+    id: 'counting-stars', label: 'Counting Stars', genre: 'pop', key: 9, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
+    ],
+  },
+  {
+    // C shapes (capo 1 — the record is a semitone up). The whole song
+    // rides | C | D | G | Em |; four passes.
+    id: 'viva-la-vida', label: 'Viva la Vida', genre: 'pop', key: 0,
+    bars: [
+      { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
+      { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
+      { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
+      { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
+    ],
+  },
+  {
+    // A — the 3-bar loop A – E/G# – Dsus2 the whole song rides (slash
+    // bass flattened; the sus2 kept). Five passes.
+    id: 'chasing-cars', label: 'Chasing Cars', genre: 'pop', key: 9,
+    bars: [
+      // | A | E | Dsus2 |  ×5
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
+    ],
+  },
+  {
+    // G shapes (the record is B — capo 4). The whole song rides
+    // | G | D | Em | C |; four passes.
+    id: 'im-yours', label: "I'm Yours", genre: 'pop', key: 7,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // C shapes (the record is E — capo 4). The I–V–vi–IV loop the whole
+    // song rides; four passes.
+    id: 'hey-soul-sister', label: 'Hey, Soul Sister', genre: 'pop', key: 0,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // F — the whole song rides | F | Dm | Bb | F | (I–vi–IV–I); four
+    // passes.
+    id: 'just-the-way-you-are', label: 'Just the Way You Are', genre: 'pop', key: 5,
+    bars: [
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // Cm — the verse sits on Cm (the Bb passing bass flattened); the
+    // chorus loop is i–VII–VI–VII: | Cm | Bb | Ab | Bb |.
+    id: 'rolling-in-the-deep', label: 'Rolling in the Deep', genre: 'pop',
+    key: 0, minor: true,
+    bars: [
+      // verse: | Cm | Cm | Cm | Cm |
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
+      // chorus ×3: | Cm | Bb | Ab | Bb |
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // A — the famous chorus loop A–C#m–F#m–D (the record's A–G#–F#
+    // bass descent flattened to root-position C#m). Four passes.
+    id: 'take-on-me', label: 'Take On Me', genre: 'pop', key: 9,
+    bars: [
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // E — I–V–vi–IV; verse and chorus both ride it. Four passes.
+    id: 'dont-stop-believin', label: "Don't Stop Believin'", genre: 'pop', key: 4,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // D — the whole song rides | D | A | Bm | G |; four passes.
+    id: 'with-or-without-you', label: 'With or Without You', genre: 'pop', key: 2,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // C — verse and chorus ride | C | Em | F | (four passes), then the
+    // "someone like you" tag lands Am–F–C.
+    id: 'use-somebody', label: 'Use Somebody', genre: 'pop', key: 0,
+    bars: [
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 5, q: '' },
+      // tag: | Am | F | C | C |
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // G — the vi–V–I–IV loop Em–D–G–C that the verse, refrain and the
+    // "shallow" hook all ride (D/F# flattened). Four passes.
+    id: 'shallow', label: 'Shallow (A Star Is Born)', genre: 'pop', key: 7,
+    bars: [
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // Bb — verse | Bb | Gm | Eb | Bb |; the "guess you didn't mean" line
+    // runs Gm–F–Bb–Dm–Eb with the Eb–F–Bb tag; then the "red lights"
+    // bridge Gm–Eb–Bb.
+    id: 'drivers-license', label: 'drivers license', genre: 'pop', key: 10,
+    bars: [
+      // verse ×2: | Bb | Gm | Eb | Bb |
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+      // chorus: | Gm F | Bb Dm | Eb | Eb F | Bb |
+      { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 5, q: '' },
+      { off: 5, q: '', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: '' },
+      // bridge: | Gm | Eb | Bb |
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // Eb — I–V–vi–IV; the whole song rides | Eb | Bb | Cm | Ab |. Four
+    // passes.
+    id: 'titanium', label: 'Titanium', genre: 'pop', key: 3,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // A — the famous I–ii–vi–IV loop | A | Bm | F#m | D |; four passes.
+    id: 'halo', label: 'Halo (Beyoncé)', genre: 'pop', key: 9,
+    bars: [
+      { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // C shapes (the record is Db — capo 1). The I–V–vi–IV loop the whole
+    // song rides; four passes.
+    id: 'someone-you-loved', label: 'Someone You Loved', genre: 'pop', key: 0,
+    bars: [
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // D — the whole song rides D–F#m with the Bm–A turn; the 8-bar
+    // phrase played twice.
+    id: 'hey-there-delilah', label: 'Hey There Delilah', genre: 'pop', key: 2,
+    bars: [
+      // | D | F#m | D | F#m | Bm | A | Bm | A |  ×2
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 0, q: '' }, { off: 4, q: 'm' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 0, q: '' }, { off: 4, q: 'm' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' },
     ],
   },
 
@@ -934,6 +1244,81 @@ export const STANDARDS = [
       // chorus: | Cmaj7 | D | Cmaj7 | D | Bm7 | Em | Cmaj7 | D |
       { off: 5, q: 'maj7' }, { off: 7, q: '' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
       { off: 4, q: 'm7' }, { off: 9, q: 'm' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
+    ],
+  },
+
+  {
+    // 걱정말아요 그대 (들국화; 이적 Reply-1988 cover) — in G the verse
+    // rides I–vi–ii–V and the refrain turns through C–D home to G.
+    id: 'dont-worry-my-dear', label: "Don't Worry, My Dear (걱정말아요 그대)",
+    genre: 'kpop', key: 7,
+    bars: [
+      // verse ×2: | G | Em | Am | D |
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      // refrain: | G | Em | C | D | G | G |
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // 눈의 꽃 (박효신) — the canon-style ballad progression in Bb:
+    // I–V–vi–iii–IV–I–ii–V (F/A bass flattened). Two passes.
+    id: 'snow-flower', label: 'Snow Flower (눈의 꽃)', genre: 'kpop', key: 10,
+    bars: [
+      // | Bb | F | Gm | Dm | Eb | Bb | Cm | F |  ×2
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // 하루하루 (BIGBANG) — the whole song rides the Em–C–G–D loop
+    // (vi–IV–I–V of G); four passes.
+    id: 'haru-haru', label: 'Haru Haru (하루하루)', genre: 'kpop', key: 4,
+    minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // 거짓말 (BIGBANG) — the whole song rides Dm–Bb–F–C (vi–IV–I–V of
+    // F); four passes.
+    id: 'lies', label: 'Lies (거짓말)', genre: 'kpop', key: 2, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // 너였다면 (정승환) — the canon-style ballad chart in C:
+    // I–V–vi–iii–IV–I–IV–V (G/B and C/E basses flattened). Two passes.
+    id: 'if-it-is-you', label: 'If It Is You (너였다면)', genre: 'kpop', key: 0,
+    bars: [
+      // | C | G | Am | Em | F | C | F | G |  ×2
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // 벚꽃 엔딩 (버스커 버스커) — the spring anthem in E: I–IV–V–I then
+    // the iii–vi–ii–V turnaround (G#m–C#m–F#m–B). Two passes.
+    id: 'cherry-blossom-ending', label: 'Cherry Blossom Ending (벚꽃 엔딩)',
+    genre: 'kpop', key: 4,
+    bars: [
+      // | E | A | B | E | G#m | C#m | F#m | B |  ×2
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' },
+      { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' },
+      { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 2, q: 'm' }, { off: 7, q: '' },
     ],
   },
 
@@ -1026,6 +1411,115 @@ export const STANDARDS = [
     ],
   },
 
+  // ---------- more rock (well-attested charts) ----------
+
+  {
+    // Em shapes (capo 1 — the record is Fm). The whole song rides
+    // | Em | G | D | A | (i–III–VII–IV); four passes.
+    id: 'boulevard-of-broken-dreams', label: 'Boulevard of Broken Dreams',
+    genre: 'rock', key: 4, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // G — the picked verse rides | G | G | Cadd9 | D |; the chorus turns
+    // Em–D–C–G. Both phrases twice.
+    id: 'good-riddance', label: 'Good Riddance (Time of Your Life)',
+    genre: 'rock', key: 7,
+    bars: [
+      // verse ×2: | G | G | Cadd9 | D |
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 5, q: 'add9' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 5, q: 'add9' }, { off: 7, q: '' },
+      // chorus ×2: | Em | D | C | G |
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // Em shapes (capo 2 — the record is F#m). The whole song rides
+    // | Em | C | G | D |; four passes.
+    id: 'numb', label: 'Numb (Linkin Park)', genre: 'rock', key: 4, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // Ab — the famous I–vi–IV–V loop; the record's add9 voicings
+    // flattened to triads. Four passes.
+    id: 'every-breath-you-take', label: 'Every Breath You Take', genre: 'rock',
+    key: 8,
+    bars: [
+      // | Ab | Fm | Db | Eb |  ×4
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // Em — the verse arpeggio loop Em–D–C (twice per phrase) with the
+    // G–B7 turnaround back to Em ("forever trusting who we are").
+    id: 'nothing-else-matters', label: 'Nothing Else Matters', genre: 'rock',
+    key: 4, minor: true,
+    bars: [
+      // | Em | D | C | C | Em | D | C | C |
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 8, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 8, q: '' },
+      // | G | B7 | Em | Em | G | B7 | Em | Em |
+      { off: 3, q: '' }, { off: 7, q: '7' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
+      { off: 3, q: '' }, { off: 7, q: '7' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // Em — the riff's chord skeleton E–G–E–C–B; four passes.
+    id: 'seven-nation-army', label: 'Seven Nation Army', genre: 'rock',
+    key: 4, minor: true,
+    bars: [
+      // | Em | G | Em | C B |  ×4
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 0, q: 'm' },
+      { off: 8, q: '', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 0, q: 'm' },
+      { off: 8, q: '', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 0, q: 'm' },
+      { off: 8, q: '', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 0, q: 'm' },
+      { off: 8, q: '', half: true }, { off: 7, q: '', half: true },
+    ],
+  },
+  {
+    // Em — the whole song rides the Em–D loop of the riff; eight passes.
+    id: 'come-as-you-are', label: 'Come as You Are', genre: 'rock',
+    key: 4, minor: true,
+    bars: [
+      // | Em | D |  ×8
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // Am — the verse alternates Am–F; the chorus ("dream of
+    // Californication") turns C–G–Dm–Am.
+    id: 'californication', label: 'Californication', genre: 'rock',
+    key: 9, minor: true,
+    bars: [
+      // verse ×4: | Am | F |
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 0, q: 'm' }, { off: 8, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 0, q: 'm' }, { off: 8, q: '' },
+      // chorus ×2: | C | G | Dm | Am |
+      { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
+      { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
+    ],
+  },
+
   // ---------- blues ----------
 
   {
@@ -1059,6 +1553,41 @@ export const STANDARDS = [
       { off: 0, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
       { off: 5, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
       { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'm7' }, { off: 7, q: '7' },
+    ],
+  },
+
+  {
+    // Am — the famous i–VII–VI–V loop (Am–G–F–E); four passes.
+    id: 'hit-the-road-jack', label: 'Hit the Road Jack', genre: 'blues',
+    key: 9, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
+      { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // Am — the verse rides | Am | Em | G | Am | (the Em/G bass
+    // flattened); the "I know" vamp stays on the loop. Four passes.
+    id: 'aint-no-sunshine', label: "Ain't No Sunshine", genre: 'blues',
+    key: 9, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // 12-bar shuffle in E (the record is tuned down a half-step; charted
+    // in E). Quick IV in bar 2, V–IV–I–V tag.
+    id: 'pride-and-joy', label: 'Pride and Joy', genre: 'blues', key: 4,
+    bars: [
+      // | E7 | A7 | E7 | E7 | A7 | A7 | E7 | E7 | B7 | A7 | E7 | B7 |
+      { off: 0, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
+      { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
+      { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
     ],
   },
 
@@ -1233,6 +1762,67 @@ export const STANDARDS = [
       { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 9, q: 'm7' }, { off: 5, q: 'maj7' }, { off: 0, q: '' },
       { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' },
+    ],
+  },
+
+  // ---------- more folk / country ----------
+
+  {
+    // G — the verse rides | G | D | Em | C |; the "rock me mama" chorus
+    // lands G–D–C. Both phrases twice.
+    id: 'wagon-wheel', label: 'Wagon Wheel', genre: 'folk', key: 7,
+    bars: [
+      // verse ×2: | G | D | Em | C |
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      // chorus ×2: | G | D | C | C |
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // Am — the whole song rides i–III–VII–i: | Am | C | G | Am |.
+    id: 'jolene', label: 'Jolene', genre: 'folk', key: 9, minor: true,
+    bars: [
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // G — the mariachi-horn chart: I–IV pairs with the V7 turnaround.
+    // Two passes of the 8-bar phrase.
+    id: 'ring-of-fire', label: 'Ring of Fire', genre: 'folk', key: 7,
+    bars: [
+      // | G | C | G | C | G | D7 | G | G |  ×2
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // Am (Johnny Cash version) — the verse walks Am–C–D; the chorus
+    // ("what have I become") turns Am–F–C–G.
+    id: 'hurt', label: 'Hurt (Johnny Cash)', genre: 'folk', key: 9, minor: true,
+    bars: [
+      // verse: | Am | C | D | Am | C | D | Am | Am |
+      { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 5, q: '' }, { off: 0, q: 'm' },
+      { off: 3, q: '' }, { off: 5, q: '' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
+      // chorus ×2: | Am | F | C | G |
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+      { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
+    ],
+  },
+  {
+    // C — the verse form | C | F | C | C | F | C | G7 | C |, twice.
+    id: 'you-are-my-sunshine', label: 'You Are My Sunshine', genre: 'folk', key: 0,
+    bars: [
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' },
     ],
   },
 ];
