@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v7';  // + song player: pause/resume/seek/audition/loops; +4 songs, 4 chart fixes
+const CACHE = 'gv-v8';  // + 57-song catalog (classical/kpop), song search in all pickers
 
 const ASSETS = [
   './',

@@ -1,5 +1,6 @@
 // Full-song chord progressions — jazz standards (Real Book repertoire)
-// plus pop/rock/blues/latin/folk songs. Same shape as progressions.js:
+// plus classical/pop/k-pop/rock/blues/latin/folk songs. Same shape as
+// progressions.js:
 // each entry resolves against `key` (canonical tonic pc; for minor tunes
 // the MINOR tonic pc, flagged `minor: true`). One entry per chord slot in
 // play order; a bar with two chords is two consecutive entries each marked
@@ -8,12 +9,14 @@
 // dropdowns by it, in GENRES key order.
 
 export const GENRES = {
-  jazz:  { ko: '재즈',      en: 'Jazz' },
-  pop:   { ko: '팝',        en: 'Pop' },
-  rock:  { ko: '록',        en: 'Rock' },
-  blues: { ko: '블루스',    en: 'Blues' },
-  latin: { ko: '라틴/보사', en: 'Latin/Bossa' },
-  folk:  { ko: '포크',      en: 'Folk' },
+  jazz:      { ko: '재즈',      en: 'Jazz' },
+  classical: { ko: '클래식',    en: 'Classical' },
+  pop:       { ko: '팝',        en: 'Pop' },
+  kpop:      { ko: '가요',      en: 'K-Pop' },
+  rock:      { ko: '록',        en: 'Rock' },
+  blues:     { ko: '블루스',    en: 'Blues' },
+  latin:     { ko: '라틴/보사', en: 'Latin/Bossa' },
+  folk:      { ko: '포크',      en: 'Folk' },
 };
 
 export const STANDARDS = [
@@ -412,6 +415,350 @@ export const STANDARDS = [
     ],
   },
 
+  // ---------- jazz additions (public lead sheets / Real Book charts) ----------
+
+  {
+    // AABA' in Ebm — the famous bar 4 holds four chords (Bm7 E7 Bbm7 Eb7,
+    // one beat each); here it's spread over two bars of half pairs. Bar 2
+    // takes the common Fm7b5–Bb7 (the RB alternate is Cdim7 Abm9 Db7);
+    // bar 1's Ebm/D→Ebm/Db bass descent is flattened. Bridge 3-chord bars
+    // drop the passing chords (Abm7–Fm7–Bb7 → Abm7 Bb7 / Fm7 Bb7);
+    // Cb9 written enharmonically as B9's root (Cb=B). Alterations
+    // flattened (B7#11→B7, Bb7sus→Bb7, Db9 kept as '9').
+    id: 'round-midnight', label: "'Round Midnight", genre: 'jazz', key: 3, minor: true,
+    bars: [
+      // A1: | Ebm7 | Fm7b5 Bb7 | Ebm7 Ab7 | Bm7 E7 | Bbm7 Eb7 | Abm7 Db7 | Ebm7 Ab7 | B7 | Bb7 |
+      { off: 0, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: 'm7', half: true }, { off: 1, q: '7', half: true },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'm7', half: true }, { off: 10, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: '7' }, { off: 7, q: '7' },
+      // A2: same, 2nd ending | B7 Bb7 | Ebm7 |
+      { off: 0, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: 'm7', half: true }, { off: 1, q: '7', half: true },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'm7', half: true }, { off: 10, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: '7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7' },
+      // B: | Cm7b5 B7 | Bb7 | Cm7b5 B7 | Bb7 | Abm7 Bb7 | Cm7b5 F7 | Db9 Cb9 | Fm7 Bb7 |
+      { off: 9, q: 'm7b5', half: true }, { off: 8, q: '7', half: true },
+      { off: 7, q: '7' },
+      { off: 9, q: 'm7b5', half: true }, { off: 8, q: '7', half: true },
+      { off: 7, q: '7' },
+      { off: 5, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 9, q: 'm7b5', half: true }, { off: 2, q: '7', half: true },
+      { off: 10, q: '9', half: true }, { off: 8, q: '9', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      // A3 (= A2): | Ebm7 | Fm7b5 Bb7 | Ebm7 Ab7 | Bm7 E7 | Bbm7 Eb7 | Abm7 Db7 | Ebm7 Ab7 | B7 Bb7 | Ebm7 |
+      { off: 0, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: 'm7', half: true }, { off: 1, q: '7', half: true },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'm7', half: true }, { off: 10, q: '7', half: true },
+      { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
+      { off: 8, q: '7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7' },
+    ],
+  },
+  {
+    // AAB, 48 bars — Porter's original changes: the opening maj7 a
+    // half-step above V7 (Abmaj7→G7; the RB alt is Dm7b5–G7), the famous
+    // F#m7b5→Fm7→Em7→Ebdim7 descent, and the C section's Ebmaj7↔Cmaj7
+    // shuttle. A2 ends on the backdoor Bb7 into the B section.
+    id: 'night-and-day', label: 'Night and Day', genre: 'jazz', key: 0,
+    bars: [
+      // A: | Abmaj7 | G7 | Cmaj7 | % | Abmaj7 | G7 | Cmaj7 | % |
+      //    | F#m7b5 | Fm7 | Em7 | Ebdim7 | Dm7 | G7 | Cmaj7 | % |
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 6, q: 'm7b5' }, { off: 5, q: 'm7' }, { off: 4, q: 'm7' }, { off: 3, q: 'dim7' },
+      { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      // A: same, 2nd ending | Cmaj7 | Bb7 |
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 6, q: 'm7b5' }, { off: 5, q: 'm7' }, { off: 4, q: 'm7' }, { off: 3, q: 'dim7' },
+      { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 10, q: '7' },
+      // B: | Ebmaj7 | % | Cmaj7 | % | Ebmaj7 | % | Cmaj7 | % |
+      //    | F#m7b5 | Fm7 | Em7 | Ebdim7 | Dm7 | G7 | C6 | % |
+      { off: 3, q: 'maj7' }, { off: 3, q: 'maj7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 3, q: 'maj7' }, { off: 3, q: 'maj7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      { off: 6, q: 'm7b5' }, { off: 5, q: 'm7' }, { off: 4, q: 'm7' }, { off: 3, q: 'dim7' },
+      { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: '6' }, { off: 0, q: '6' },
+    ],
+  },
+  {
+    // AABA, 32 bars — the jazz-circle chart: A detours through C major
+    // (Dm7–G7–Cmaj7, bars 3–4) and the bridge chains ii–V–Is up in
+    // half-steps (D → E → F#) before working back to Db. Older fakebooks
+    // harmonise bar 4 with Fm7–E°7 instead — both are standard.
+    id: 'body-and-soul', label: 'Body and Soul', genre: 'jazz', key: 1,
+    bars: [
+      // A1: | Ebm7 Ab7 | Dbmaj7 | Dm7 G7 | Cmaj7 | Cm7 F7 | Bbm7 Eb7 | Ebm7 Ab7 | Dbmaj7 Ab7 |
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      { off: 1, q: 'm7', half: true }, { off: 6, q: '7', half: true },
+      { off: 11, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 2, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7', half: true }, { off: 7, q: '7', half: true },
+      // A2: same, ending | Dbmaj7 | % |
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      { off: 1, q: 'm7', half: true }, { off: 6, q: '7', half: true },
+      { off: 11, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 2, q: '7', half: true },
+      { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+      // B: | Dmaj7 | F#m7 B7 | Emaj7 | G#m7 C#7 | F#maj7 | Cm7 F7 | Fm7 Bb7 | Ebm7 Ab7 |
+      { off: 1, q: 'maj7' },
+      { off: 5, q: 'm7', half: true }, { off: 10, q: '7', half: true },
+      { off: 3, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      // A3 = A2
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      { off: 1, q: 'm7', half: true }, { off: 6, q: '7', half: true },
+      { off: 11, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 2, q: '7', half: true },
+      { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+    ],
+  },
+  {
+    // AABA, 32 bars in F — the double minor line-cliché (Dm then Gm;
+    // Dm(maj7)→Dm and Gm(maj7)→Gm, the maj7s aren't in QUALITIES). Bridge
+    // is the Db-major shuttle. Fmaj7 for the final F.
+    id: 'in-a-sentimental-mood', label: 'In a Sentimental Mood', genre: 'jazz', key: 5,
+    bars: [
+      // A: | Dm Dm(maj7) | Dm7 Dm6 | Gm Gm(maj7) | Gm7 Gm6 | Dm | Dm D7 | Gm7 C7 | Fmaj7 |
+      { off: 9, q: 'm', half: true }, { off: 9, q: 'm', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 9, q: 'm6', half: true },
+      { off: 2, q: 'm', half: true }, { off: 2, q: 'm', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 2, q: 'm6', half: true },
+      { off: 9, q: 'm' },
+      { off: 9, q: 'm', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      // A: same again
+      { off: 9, q: 'm', half: true }, { off: 9, q: 'm', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 9, q: 'm6', half: true },
+      { off: 2, q: 'm', half: true }, { off: 2, q: 'm', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 2, q: 'm6', half: true },
+      { off: 9, q: 'm' },
+      { off: 9, q: 'm', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      // B: | Dbmaj7 Bbm7 | Ebm7 Ab7 | Dbmaj7 Bb7 | Ebm7 Ab7 |
+      //    | Dbmaj7 Bbm7 | Ebm7 Ab7 | Gm7 | C7 |
+      { off: 8, q: 'maj7', half: true }, { off: 5, q: 'm7', half: true },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 8, q: 'maj7', half: true }, { off: 5, q: '7', half: true },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 8, q: 'maj7', half: true }, { off: 5, q: 'm7', half: true },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 2, q: 'm7' }, { off: 7, q: '7' },
+      // A: final
+      { off: 9, q: 'm', half: true }, { off: 9, q: 'm', half: true },
+      { off: 9, q: 'm7', half: true }, { off: 9, q: 'm6', half: true },
+      { off: 2, q: 'm', half: true }, { off: 2, q: 'm', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 2, q: 'm6', half: true },
+      { off: 9, q: 'm' },
+      { off: 9, q: 'm', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+    ],
+  },
+  {
+    // AABA, 32 bars in Cm — the jam-session minor ii–V–i workout. Bridge
+    // climbs Ebmaj7 → C7 → Fm7 → F#dim7 and home (the diatonic-chords-
+    // with-diminished-passes version; the common ii–V reharm is
+    // Ebmaj7 Gm7b5 C7 | Fm7 Am7b5 D7 | G7).
+    id: 'softly-as-in-a-morning-sunrise', label: 'Softly, as in a Morning Sunrise',
+    genre: 'jazz', key: 0, minor: true,
+    bars: [
+      // A: | Cm7 | % | Dm7b5 | G7 | Cm7 | % | Dm7b5 | G7 |
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      // A: repeat
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      // B: | Ebmaj7 | % | C7 | % | Fm7 | F#dim7 | Dm7b5 | G7 |
+      { off: 3, q: 'maj7' }, { off: 3, q: 'maj7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
+      { off: 5, q: 'm7' }, { off: 6, q: 'dim7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      // A: final — bar 6 takes the ii–V turnaround
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' },
+      { off: 0, q: 'm7' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+    ],
+  },
+  {
+    // 16-bar form played twice (Dm). Bars 5–6 keep the Dm root while the
+    // original Dm/C#→Dm/C bass descent is flattened. A7#5→A7; the first
+    // pass ends on the signature bII7 (Eb7) tritone-sub turnaround, the
+    // second takes the final ending | Eb7 | Dm6 |.
+    id: 'yesterdays', label: 'Yesterdays', genre: 'jazz', key: 2, minor: true,
+    bars: [
+      // pass 1: | Dm6 | Em7b5 A7 | Dm6 | Em7b5 A7 | Dm | % | Bm7b5 | E7 |
+      { off: 0, q: 'm6' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm6' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 9, q: 'm7b5' }, { off: 2, q: '7' },
+      // | A7 | D7 | G7 | C7 | Cm7 F7 | Bbmaj7 Ebmaj7 | Em7 | Eb7 |
+      { off: 7, q: '7' }, { off: 0, q: '7' }, { off: 5, q: '7' }, { off: 10, q: '7' },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 8, q: 'maj7', half: true }, { off: 1, q: 'maj7', half: true },
+      { off: 2, q: 'm7' }, { off: 1, q: '7' },
+      // pass 2: same, final ending | Eb7 | Dm6 |
+      { off: 0, q: 'm6' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm6' },
+      { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 9, q: 'm7b5' }, { off: 2, q: '7' },
+      { off: 7, q: '7' }, { off: 0, q: '7' }, { off: 5, q: '7' }, { off: 10, q: '7' },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 8, q: 'maj7', half: true }, { off: 1, q: 'maj7', half: true },
+      { off: 1, q: '7' }, { off: 0, q: 'm6' },
+    ],
+  },
+  {
+    // AABA, 64 bars in Bb — the bebop workout. The bridge cycles ii–V–Is
+    // through major-thirds-related centres (B → Eb → G) then stacks
+    // ii–Vs (Dm7–G7, then Cm7–F7 ×3) to get home. One chord per bar in
+    // the A sections, two per bar in most of the bridge.
+    id: 'cherokee', label: 'Cherokee', genre: 'jazz', key: 10,
+    bars: [
+      // A: | Bbmaj7 | Fm7 Bb7 | Ebmaj7 | % | Abmaj7 | % | Dm7 G7 | Cm7 F7 |
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' }, { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      // | Bbmaj7 | Fm7 Bb7 | Ebmaj7 | % | Abmaj7 | Dm7 G7 | Cm7 F7 | Bbmaj7 |
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      // A: repeat (bars 17–32)
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' }, { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      // B: | C#m7 F#7 | Bmaj7 | % | % | Fm7 Bb7 | Ebmaj7 | % | % |
+      //    | Am7 D7 | Gmaj7 | % | % | Dm7 G7 | Cm7 F7 | Cm7 F7 | Cm7 F7 |
+      { off: 3, q: 'm7', half: true }, { off: 8, q: '7', half: true },
+      { off: 1, q: 'maj7' }, { off: 1, q: 'maj7' }, { off: 1, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'maj7' }, { off: 9, q: 'maj7' }, { off: 9, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      // A: final (bars 49–64)
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' }, { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+      { off: 7, q: 'm7', half: true }, { off: 0, q: '7', half: true },
+      { off: 5, q: 'maj7' }, { off: 5, q: 'maj7' },
+      { off: 10, q: 'maj7' },
+      { off: 4, q: 'm7', half: true }, { off: 9, q: '7', half: true },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'maj7' },
+    ],
+  },
+
+  // ---------- classical ----------
+
+  {
+    // The 8-bar ground bass (I–V–vi–iii–IV–I–IV–V) played twice — the
+    // piece loops this under every variation. In 4/4 here; the original
+    // is a slow ground, one chord per bar.
+    id: 'canon-in-d', label: 'Canon in D (Pachelbel)', genre: 'classical', key: 2,
+    bars: [
+      // | D | A | Bm | F#m | G | D | G | A | ×2
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+    ],
+  },
+  {
+    // Harmonic skeleton of the main theme (WoO 59, A minor, 3/8 — one
+    // chord per bar): theme A rides i–V, the B glance visits C major then
+    // prolongs the dominant E. The record/most charts use E major (E7 is
+    // the common variant — the b7 D is melodically inert here).
+    id: 'fur-elise', label: 'Für Elise (theme skeleton)', genre: 'classical',
+    key: 9, minor: true,
+    bars: [
+      // A: | Am | Am | E | Am | Am | Am | E | Am |
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
+      // B: | C | G | Am | E | % | % |
+      { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
+      { off: 7, q: '' }, { off: 7, q: '' }, { off: 7, q: '' },
+      // A: repeat
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
+      { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // Minuet in G, BWV Anh. 114 (C. Petzold, attr. Bach) — harmonic
+    // reduction of the 32-bar binary minuet. In 3/4; one chord per bar,
+    // the beat-3 dominant pickups on bars 1/3/9/11 are folded into G,
+    // and bar 24's late D into Em. Unlabeled bars in the source ABC
+    // harmonization (19, 23) are filled with the implied Em/B7.
+    id: 'minuet-in-g', label: 'Minuet in G, BWV Anh. 114 (Petzold/Bach)',
+    genre: 'classical', key: 7,
+    bars: [
+      // A: | G | % | % | % | C | G | Am | D |
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+      { off: 5, q: '' }, { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      // A: repeat, ending | Am7 D7 | G |
+      { off: 0, q: '' }, { off: 0, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
+      { off: 5, q: '' }, { off: 0, q: '' },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: '' },
+      // B: | B7 | Em | % | B7 | Em | B7 | % | Em |
+      //    | G | C | Am | D | % | G | D7 | % |
+      { off: 4, q: '7' }, { off: 9, q: 'm' }, { off: 9, q: 'm' }, { off: 4, q: '7' },
+      { off: 9, q: 'm' }, { off: 4, q: '7' }, { off: 4, q: '7' }, { off: 9, q: 'm' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
+      { off: 7, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 7, q: '7' },
+    ],
+  },
+
   // ---------- pop ----------
 
   {
@@ -459,6 +806,134 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+    ],
+  },
+  {
+    // F — the famous 7-bar verse (it "wants" an 8th bar) + the 5-bar
+    // "why she had to go" middle played twice, then the verse again.
+    // Slash-bass walkdowns flattened (F/E→F, Dm/C→Dm).
+    id: 'yesterday', label: 'Yesterday', genre: 'pop', key: 5,
+    bars: [
+      // verse (7 bars): | F Em7 | A7 Dm | Dm Bb | C7 F | F Dm | G7 Bb | F |
+      { off: 0, q: '', half: true }, { off: 11, q: 'm7', half: true },
+      { off: 4, q: '7', half: true }, { off: 9, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 7, q: '7', half: true }, { off: 0, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 9, q: 'm', half: true },
+      { off: 2, q: '7', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '' },
+      // middle ×2: | Em7 A7 | Dm C | Bb | Gm7 C7 | F |
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
+      { off: 5, q: '' },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: '' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
+      { off: 5, q: '' },
+      { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: '' },
+      // verse: final
+      { off: 0, q: '', half: true }, { off: 11, q: 'm7', half: true },
+      { off: 4, q: '7', half: true }, { off: 9, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 7, q: '7', half: true }, { off: 0, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 9, q: 'm', half: true },
+      { off: 2, q: '7', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '' },
+    ],
+  },
+  {
+    // A — the verse groove is one chord per bar on the | F#m | D | A | E |
+    // loop; the last pass extends to | F#m | D | A | C#m | E | F#m E |
+    // ("it's gonna take a lot..."). Record is a half-step up in B; the
+    // common chart is written in A shapes (capo 2).
+    id: 'africa', label: 'Africa', genre: 'pop', key: 9,
+    bars: [
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 4, q: 'm' },
+      { off: 7, q: '' },
+      { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
+    ],
+  },
+
+  // ---------- k-pop / 가요 ----------
+
+  {
+    // 밤편지 (IU) — record is Eb; the standard online chart is written in
+    // G shapes. Verse runs | G A | F#m Bm | G A | F#m | B Em | Gm D |;
+    // the Gm minor-tonic switch and the D–C outro walkdown are the
+    // signature moves.
+    id: 'through-the-night', label: 'Through the Night (밤편지)', genre: 'kpop', key: 7,
+    bars: [
+      // verse: | G A | F#m Bm | G A | F#m | B Em | Gm D | G | D |
+      { off: 0, q: '', half: true }, { off: 2, q: '', half: true },
+      { off: 11, q: 'm', half: true }, { off: 4, q: 'm', half: true },
+      { off: 0, q: '', half: true }, { off: 2, q: '', half: true },
+      { off: 11, q: 'm' },
+      { off: 4, q: '', half: true }, { off: 9, q: 'm', half: true },
+      { off: 0, q: 'm', half: true }, { off: 7, q: '', half: true },
+      { off: 0, q: '' }, { off: 7, q: '' },
+      // chorus: | G Gm | F#m Bm | Em F#7 | Bm A | D | G Gm | A B | Em Gm |
+      { off: 0, q: '', half: true }, { off: 0, q: 'm', half: true },
+      { off: 11, q: 'm', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 11, q: '7', half: true },
+      { off: 4, q: 'm', half: true }, { off: 2, q: '', half: true },
+      { off: 7, q: '' },
+      { off: 0, q: '', half: true }, { off: 0, q: 'm', half: true },
+      { off: 2, q: '', half: true }, { off: 4, q: '', half: true },
+      { off: 9, q: 'm', half: true }, { off: 0, q: 'm', half: true },
+      // outro tag: | G Gm | D C | G A |
+      { off: 0, q: '', half: true }, { off: 0, q: 'm', half: true },
+      { off: 7, q: '', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 2, q: '', half: true },
+    ],
+  },
+  {
+    // 봄날 (BTS) — record is Eb; charted in the standard D-shape version
+    // (capo 1). The whole song cycles | D F#m | Bm G |; the chorus turns
+    // through | Bm F#m | G Gm | — the borrowed iv Gm is the hook.
+    id: 'spring-day', label: 'Spring Day (봄날)', genre: 'kpop', key: 2,
+    bars: [
+      // verse/rap: | D F#m | Bm G | ×4
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      // pre-chorus: | D F#m | Bm G | ×2
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      // chorus: | D F#m | Bm G | Bm F#m | G Gm | ×2
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 9, q: 'm', half: true }, { off: 4, q: 'm', half: true },
+      { off: 5, q: '', half: true }, { off: 5, q: 'm', half: true },
+      { off: 0, q: '', half: true }, { off: 4, q: 'm', half: true },
+      { off: 9, q: 'm', half: true }, { off: 5, q: '', half: true },
+      { off: 9, q: 'm', half: true }, { off: 4, q: 'm', half: true },
+      { off: 5, q: '', half: true }, { off: 5, q: 'm', half: true },
+    ],
+  },
+  {
+    // 사랑을 했다 (iKON) — in G the record rides Em–C–G–D (vi–IV–I–V).
+    // The famous whistle hook is Cmaj7–D (IVmaj7–V) with the
+    // Bm7→Em→Cmaj7→D tail on the second line.
+    id: 'love-scenario', label: 'Love Scenario (사랑을 했다)', genre: 'kpop', key: 7,
+    bars: [
+      // verse: | Em | C | G | D | ×2
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '' },
+      // chorus: | Cmaj7 | D | Cmaj7 | D | Bm7 | Em | Cmaj7 | D |
+      { off: 5, q: 'maj7' }, { off: 7, q: '' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
+      { off: 4, q: 'm7' }, { off: 9, q: 'm' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
     ],
   },
 
@@ -520,6 +995,34 @@ export const STANDARDS = [
       { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
       { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
       { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
+    ],
+  },
+  {
+    // G — the whole song is the 4-bar loop G–B–C–Cm (I–III–IV–iv); the
+    // major B and borrowed Cm are the sound of the tune. Four passes
+    // (verse ×2 + chorus ×2).
+    id: 'creep', label: 'Creep', genre: 'rock', key: 7,
+    bars: [
+      { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
+      { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
+      { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
+      { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
+    ],
+  },
+  {
+    // G — the intro arpeggio figure (Em7–G twice, then Em7–A7sus4 twice
+    // into G) plus the 8-bar verse loop C–D–Am–G–D–C–Am–G, played twice.
+    id: 'wish-you-were-here', label: 'Wish You Were Here', genre: 'rock', key: 7,
+    bars: [
+      // intro: | Em7 | G | Em7 | G | Em7 | A7sus4 | Em7 | A7sus4 | G | % |
+      { off: 9, q: 'm7' }, { off: 0, q: '' }, { off: 9, q: 'm7' }, { off: 0, q: '' },
+      { off: 9, q: 'm7' }, { off: 2, q: '7sus4' }, { off: 9, q: 'm7' }, { off: 2, q: '7sus4' },
+      { off: 0, q: '' }, { off: 0, q: '' },
+      // verse ×2: | C | D | Am | G | D | C | Am | G |
+      { off: 5, q: '' }, { off: 7, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
+      { off: 7, q: '' }, { off: 5, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
+      { off: 5, q: '' }, { off: 7, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
+      { off: 7, q: '' }, { off: 5, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
     ],
   },
 
@@ -625,6 +1128,25 @@ export const STANDARDS = [
       { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
     ],
   },
+  {
+    // 16-bar Latin/modal tune in Am — four bars each of Am7 and Cm7
+    // (i→iii colour), then the ii–V–I descent through Ab and Gb major
+    // resolving to Fmaj7; E7(#9→E7) takes it back to A minor.
+    id: 'recordame', label: 'Recordame', genre: 'latin', key: 9, minor: true,
+    bars: [
+      // | Am7 | % | % | % | Cm7 | % | % | % |
+      { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+      { off: 3, q: 'm7' }, { off: 3, q: 'm7' }, { off: 3, q: 'm7' }, { off: 3, q: 'm7' },
+      // | Bbmaj7 | Bbm7 Eb7 | Abmaj7 | Abm7 Db7 | Gbmaj7 | Gm7 C7 | Fmaj7 | E7 |
+      { off: 1, q: 'maj7' },
+      { off: 1, q: 'm7', half: true }, { off: 6, q: '7', half: true },
+      { off: 11, q: 'maj7' },
+      { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
+      { off: 9, q: 'maj7' },
+      { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
+      { off: 8, q: 'maj7' }, { off: 7, q: '7' },
+    ],
+  },
 
   // ---------- folk ----------
 
@@ -674,6 +1196,43 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
+    ],
+  },
+  {
+    // English folk in Am (in 6/8 — charted one or two chords per bar as on
+    // the common guitar sheets). Verse walks Am–C–G–Em and cadences on E;
+    // the refrain ("Greensleeves was all my joy") starts on C.
+    id: 'greensleeves', label: 'Greensleeves', genre: 'folk', key: 9, minor: true,
+    bars: [
+      // verse: | Am C | G Em | Am | E | Am C | G Em | Am E7 | Am |
+      { off: 0, q: 'm', half: true }, { off: 3, q: '', half: true },
+      { off: 10, q: '', half: true }, { off: 7, q: 'm', half: true },
+      { off: 0, q: 'm' }, { off: 7, q: '' },
+      { off: 0, q: 'm', half: true }, { off: 3, q: '', half: true },
+      { off: 10, q: '', half: true }, { off: 7, q: 'm', half: true },
+      { off: 0, q: 'm', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' },
+      // refrain: | C G | Em | Am | E | C G | Em | Am E7 | Am |
+      { off: 3, q: '', half: true }, { off: 10, q: '', half: true },
+      { off: 7, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' },
+      { off: 3, q: '', half: true }, { off: 10, q: '', half: true },
+      { off: 7, q: 'm' },
+      { off: 0, q: 'm', half: true }, { off: 7, q: '7', half: true },
+      { off: 0, q: 'm' },
+    ],
+  },
+  {
+    // 아리랑 — Korean folk song in a simple Western harmonization in C
+    // (the standard guitar arrangement: C Am7 Fmaj7 C / G Am G C, played
+    // for both Arirang phrases). Major-key reading of the pentatonic
+    // melody; minor/7th colours follow the published guitar chart.
+    id: 'arirang', label: 'Arirang (아리랑)', genre: 'folk', key: 0,
+    bars: [
+      // | C | Am7 | Fmaj7 | C | G | Am | G | C | ×2
+      { off: 0, q: '' }, { off: 9, q: 'm7' }, { off: 5, q: 'maj7' }, { off: 0, q: '' },
+      { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' },
+      { off: 0, q: '' }, { off: 9, q: 'm7' }, { off: 5, q: 'maj7' }, { off: 0, q: '' },
+      { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' },
     ],
   },
 ];

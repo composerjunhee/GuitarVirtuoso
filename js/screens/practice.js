@@ -58,24 +58,31 @@ function renderSetup() {
   const customs = getCustomProgressions();
   const allProgs = [...PROGRESSIONS, ...STANDARDS, ...customs];
   if (!allProgs.some(p => p.id === setup.prog)) setup.prog = PROGRESSIONS[0].id;
-  // #progChips is a <select>: optgroups stand in for the old chip wall's
-  // "Jazz standards" divider + .std wash. Rebuilt every render so language
-  // switches and saved/deleted customs show up immediately; the change
-  // listener lives in initPractice (the element itself persists).
+  fillProgSelect($('progSearch').value, customs);
+  $('progSearch').placeholder = t('pr.search');
+  rootPicker($('keyChips'), setup.key, id => { setup.key = id; }, opts());
+}
+
+// ---------- song search ----------
+// <option hidden> is patchy cross-browser, so the filter rebuilds the
+// select's optgroups per keystroke instead. fold() drops case + accents so
+// "gm", "(Gm" or "autumn" all hit "Autumn Leaves (Gm)". The current pick
+// stays while visible, else the first hit is adopted via the normal
+// change handler (which also adopts a standard's canonical key).
+const foldText = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const progLabel = (p, std) => p.label + (std && Number.isInteger(p.key)
+  ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})` : '');
+
+function fillProgSelect(filter = '', customs = getCustomProgressions()) {
   const sel = $('progChips');
+  const needle = foldText(filter.trim());
   sel.replaceChildren();
   const addGroup = (label, progs, std) => {
-    if (!progs.length) return;
+    const hits = progs.filter(p => !needle || foldText(progLabel(p, std)).includes(needle));
+    if (!hits.length) return;
     const og = document.createElement('optgroup');
     og.label = label;
-    for (const p of progs) {
-      // a standard's canonical key moves into the option text now that the
-      // chip's key sub-line is gone: "Autumn Leaves (Gm)"
-      const keyHint = std && Number.isInteger(p.key)
-        ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})`
-        : '';
-      og.append(new Option(p.label + keyHint, p.id));
-    }
+    for (const p of hits) og.append(new Option(progLabel(p, std), p.id));
     sel.append(og);
   };
   addGroup(t('pr.progPresets'), PROGRESSIONS, false);
@@ -85,8 +92,19 @@ function renderSetup() {
       STANDARDS.filter(p => p.genre === g), true);
   }
   addGroup(t('pr.myProgs'), customs, false);
+  if (!sel.options.length) {
+    const o = new Option(t('pr.noMatch'), '');
+    o.disabled = true;
+    sel.append(o);
+  }
   sel.value = setup.prog;
-  rootPicker($('keyChips'), setup.key, id => { setup.key = id; }, opts());
+  if (sel.value !== setup.prog) {            // the pick was filtered out
+    const first = [...sel.options].find(o => !o.disabled);
+    if (first) {
+      sel.value = first.value;
+      sel.dispatchEvent(new Event('change'));
+    } else sel.value = '';
+  }
 }
 
 function resolveDeck() {
@@ -513,6 +531,7 @@ export function initPractice() {
     b.addEventListener('click', () => { setup.input = b.dataset.input; renderSetup(); }));
   document.querySelectorAll('[data-deck]').forEach(b =>
     b.addEventListener('click', () => { setup.deck = b.dataset.deck; renderSetup(); }));
+  $('progSearch').addEventListener('input', e => fillProgSelect(e.target.value));
   // same semantics as the old chip click: pick the progression, and a
   // standard's canonical key adopts into the key picker on re-render
   $('progChips').addEventListener('change', () => {

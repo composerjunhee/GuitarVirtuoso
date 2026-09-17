@@ -611,15 +611,23 @@ export async function runAll(report = console.log) {
   // (per-song quality/offset/half-pair/makeChord checks already ran in the
   // 'standards data' block above — it loops every catalog entry)
   report('song catalog');
-  ok(STANDARDS.length >= 30, `≥30 songs in catalog (got ${STANDARDS.length})`);
+  ok(STANDARDS.length >= 50, `≥50 songs in catalog (got ${STANDARDS.length})`);
   ok(Object.keys(GENRES).every(g => GENRES[g].ko && GENRES[g].en),
     'GENRES labels all bilingual (ko+en)');
   ok(STANDARDS.every(sd => sd.genre && sd.genre in GENRES),
     'every song has a genre in GENRES',
     STANDARDS.filter(sd => !(sd.genre in GENRES)).map(sd => sd.id).join(','));
-  ok(STANDARDS.filter(sd => sd.genre === 'jazz').length >= 12,
-    'jazz group non-empty (≥12)',
+  ok(STANDARDS.filter(sd => sd.genre === 'jazz').length >= 20,
+    'jazz group non-empty (≥20)',
     `jazz=${STANDARDS.filter(sd => sd.genre === 'jazz').length}`);
+  ok(['classical', 'kpop'].every(g => g in GENRES &&
+    STANDARDS.some(sd => sd.genre === g)),
+    'new classical + kpop genres exist and non-empty');
+  ok(Object.keys(GENRES).every(g =>
+    STANDARDS.filter(sd => sd.genre === g).length >= 3),
+    'every genre has ≥3 songs',
+    Object.keys(GENRES).map(g =>
+      `${g}=${STANDARDS.filter(sd => sd.genre === g).length}`).join(' '));
   for (const sd of STANDARDS) {
     // cells must partition slots in order and beats must equal 4×cells —
     // the same barCells contract the song-mode chart relies on
@@ -661,6 +669,31 @@ export async function runAll(report = console.log) {
       st.bars[14].q === '7' && st.bars[15].half === true &&
       st.bars[15].off === 10 && st.bars[15].q === '7',
       'Summertime bar 12 = D7 G7');
+  }
+  { // spot-check: Night and Day opens Abmaj7→G7 — the maj7 a half-step
+    // above the dominant. Bar 0 pcs should be Ab C Eb G (8,0,3,7).
+    const nd = STANDARDS.find(x => x.id === 'night-and-day');
+    const ch = nd && makeChord(nd.key + nd.bars[0].off, nd.bars[0].q);
+    const pcs = ch && chordPcs(ch.root, ch.quality);
+    ok(!!nd && nd.key === 0 && nd.bars[0].off === 8 &&
+      pcs.has(8) && pcs.has(0) && pcs.has(3) && pcs.has(7),
+      'Night and Day bar 0 = Abmaj7 (pcs 8,0,3,7)');
+  }
+  { // spot-check: Canon in D — classical entry opens on the I–V of the
+    // ground bass (D then A), one chord per bar
+    const cd = STANDARDS.find(x => x.id === 'canon-in-d');
+    ok(!!cd && cd.genre === 'classical' && cd.key === 2 &&
+      cd.bars[0].off === 0 && cd.bars[0].q === '' &&
+      cd.bars[1].off === 7 && cd.bars[1].q === '',
+      'Canon in D opens D → A');
+  }
+  { // spot-check: 밤편지 keeps the signature G→Gm minor-tonic switch and
+    // opens on a G/A half pair
+    const tt = STANDARDS.find(x => x.id === 'through-the-night');
+    ok(!!tt && tt.genre === 'kpop' && tt.key === 7 &&
+      tt.bars[0].half === true && tt.bars[0].off === 0 &&
+      tt.bars[1].off === 2 && tt.bars.some(b => b.off === 0 && b.q === 'm'),
+      'Through the Night: G/A opening + Gm switch');
   }
 
   report(`\n${pass} passed, ${fail} failed` +

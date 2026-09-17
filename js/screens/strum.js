@@ -55,6 +55,8 @@ const STR = {
     micFailed: '마이크를 열 수 없습니다.',
     progPresets: '프리셋',
     standards: '재즈 스탠다드',
+    search: '곡/진행 검색…',
+    noMatch: '결과 없음',
   },
   en: {
     pattern: 'Pattern',
@@ -84,6 +86,8 @@ const STR = {
     micFailed: 'Could not open the microphone.',
     progPresets: 'Presets',
     standards: 'Jazz standards',
+    search: 'Search songs…',
+    noMatch: 'No matches',
   },
 };
 
@@ -142,6 +146,7 @@ function render() {
           <span id="stQual" class="chip-row wrap"></span></div>
       </div>
       <div id="stProgOpts" hidden>
+        <div class="chip-row"><input id="stProgSearch" type="search" class="gt-search"></div>
         <div class="chip-row"><span class="row-label" data-s="key"></span>
           <span id="stKey" class="chip-row"></span></div>
         <div class="chip-row"><span class="row-label" data-s="prog"></span>
@@ -224,6 +229,7 @@ function wire() {
   // standard's canonical key adopts into the key picker on re-render.
   // wired here (once per render()) — renderSetupRows re-runs on the same
   // element and would stack listeners.
+  q('stProgSearch').addEventListener('input', e => fillProgSelect(e.target.value));
   q('stProg').addEventListener('change', () => {
     const p = [...PROGRESSIONS, ...STANDARDS]
       .find(x => x.id === q('stProg').value);
@@ -236,6 +242,8 @@ function wire() {
 
 function fillStrings() {
   body.querySelectorAll('[data-s]').forEach(el => { el.textContent = s(el.dataset.s); });
+  const se = q('stProgSearch');
+  if (se) se.placeholder = s('search');
 }
 
 function showPanel(p) {
@@ -313,18 +321,33 @@ function renderSetupRows() {
   // keep setup.prog pointing at a real option (same fallback as practice)
   if (![...PROGRESSIONS, ...STANDARDS].some(p => p.id === setup.prog))
     setup.prog = PROGRESSIONS[0].id;
+  fillProgSelect(q('stProgSearch').value);
+  segRow(q('stMic'), [
+    { id: 'off', label: s('micOff') },
+    { id: 'on', label: s('micOn') },
+  ], setup.micCheck ? 'on' : 'off', id => { setup.micCheck = id === 'on'; });
+}
+
+// ---------- song search ----------
+// <option hidden> is patchy cross-browser, so the filter rebuilds the
+// select's optgroups per keystroke instead. fold() drops case + accents so
+// "gm", "(Gm" or "autumn" all hit "Autumn Leaves (Gm)". The current pick
+// stays while visible, else the first hit is adopted via the normal
+// change handler.
+const foldText = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const progLabel = (p, std) => p.label + (std && p.key !== undefined
+  ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})` : '');
+
+function fillProgSelect(filter = '') {
   const progEl = q('stProg');
+  const needle = foldText(filter.trim());
   progEl.replaceChildren();
   const addGroup = (label, progs, std) => {
-    if (!progs.length) return;
+    const hits = progs.filter(p => !needle || foldText(progLabel(p, std)).includes(needle));
+    if (!hits.length) return;
     const og = document.createElement('optgroup');
     og.label = label;
-    for (const p of progs) {
-      const keyHint = std && p.key !== undefined
-        ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})`
-        : '';
-      og.append(new Option(p.label + keyHint, p.id));
-    }
+    for (const p of hits) og.append(new Option(progLabel(p, std), p.id));
     progEl.append(og);
   };
   addGroup(s('progPresets'), PROGRESSIONS, false);
@@ -333,11 +356,19 @@ function renderSetupRows() {
     addGroup(GENRES[g][getLang()] ?? GENRES[g].en,
       STANDARDS.filter(p => p.genre === g), true);
   }
+  if (!progEl.options.length) {
+    const o = new Option(s('noMatch'), '');
+    o.disabled = true;
+    progEl.append(o);
+  }
   progEl.value = setup.prog;
-  segRow(q('stMic'), [
-    { id: 'off', label: s('micOff') },
-    { id: 'on', label: s('micOn') },
-  ], setup.micCheck ? 'on' : 'off', id => { setup.micCheck = id === 'on'; });
+  if (progEl.value !== setup.prog) {         // the pick was filtered out
+    const first = [...progEl.options].find(o => !o.disabled);
+    if (first) {
+      progEl.value = first.value;
+      progEl.dispatchEvent(new Event('change'));
+    } else progEl.value = '';
+  }
 }
 
 // ---------- session ----------

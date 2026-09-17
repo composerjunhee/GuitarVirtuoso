@@ -54,6 +54,8 @@ const STR = {
     loop2: '2번',
     loop3: '3번',
     loopInf: '계속',
+    search: '곡 검색…',
+    noMatch: '결과 없음',
   },
   en: {
     song: 'Song',
@@ -83,6 +85,8 @@ const STR = {
     loop2: '2×',
     loop3: '3×',
     loopInf: '∞',
+    search: 'Search songs…',
+    noMatch: 'No matches',
   },
 };
 
@@ -133,6 +137,7 @@ export function barCells(song) {
 function render() {
   body.innerHTML = `
     <div id="sgSetup" class="setup-card">
+      <div class="chip-row"><input id="sgSongSearch" type="search" class="gt-search"></div>
       <div class="chip-row"><span class="row-label" data-s="song"></span>
         <select id="sgSong" class="gt-select"></select></div>
       <div class="chip-row bpm-row"><span class="row-label">BPM</span>
@@ -199,6 +204,7 @@ function wire() {
   q('sgRestart').addEventListener('click', restartSession);
   q('sgAgain').addEventListener('click', () => { session = null; showPanel('setup'); });
   q('sgSong').addEventListener('change', () => { setup.song = q('sgSong').value; });
+  q('sgSongSearch').addEventListener('input', e => fillSongSelect(e.target.value));
   q('sgBpm').addEventListener('input', () => setBpm(+q('sgBpm').value));
   q('sgBpmLive').addEventListener('input', () => setBpm(+q('sgBpmLive').value));
   q('sgBpmDown').addEventListener('click', () => setBpm(setup.bpm - 1));
@@ -214,6 +220,7 @@ function fillStrings() {
     el.title = s(el.dataset.st);
     el.setAttribute('aria-label', s(el.dataset.st));
   });
+  q('sgSongSearch').placeholder = s('search');
   paintPauseBtn();
 }
 
@@ -233,27 +240,50 @@ function showPanel(p) {
 
 // ---------- setup ----------
 
+// ---------- song search ----------
+// <option hidden> support is patchy cross-browser, so the filter rebuilds
+// #sgSong's optgroups each keystroke instead. fold() drops case + accents,
+// so "gm", "(Gm" or "autumn" all hit "Autumn Leaves (Gm)". A genre group
+// drops when nothing in it matches; the current pick stays while it's
+// visible, else the first hit is adopted via the normal change handler.
+const foldText = x => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const songLabel = p => p.label + (Number.isInteger(p.key)
+  ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})` : '');
+
+function fillSongSelect(filter = '') {
+  const sel = q('sgSong');
+  const needle = foldText(filter.trim());
+  sel.replaceChildren();
+  for (const g of Object.keys(GENRES)) {
+    const progs = STANDARDS.filter(p =>
+      p.genre === g && (!needle || foldText(songLabel(p)).includes(needle)));
+    if (!progs.length) continue;
+    const og = document.createElement('optgroup');
+    og.label = GENRES[g][getLang()] ?? GENRES[g].en;
+    for (const p of progs) og.append(new Option(songLabel(p), p.id));
+    sel.append(og);
+  }
+  if (!sel.options.length) {
+    const o = new Option(s('noMatch'), '');
+    o.disabled = true;
+    sel.append(o);
+  }
+  sel.value = setup.song;
+  if (sel.value !== setup.song) {          // the pick was filtered out
+    const first = [...sel.options].find(o => !o.disabled);
+    if (first) {
+      sel.value = first.value;
+      sel.dispatchEvent(new Event('change'));   // same side-effect path
+    } else sel.value = '';                 // nothing matches — keep setup.song
+  }
+}
+
 function renderSetupRows() {
   // one optgroup per genre present in the catalog, in GENRES order —
   // same shape as the strum/practice pickers. A song's canonical key
   // rides in the option text: "Autumn Leaves (Gm)".
-  const sel = q('sgSong');
-  sel.replaceChildren();
-  for (const g of Object.keys(GENRES)) {
-    const progs = STANDARDS.filter(p => p.genre === g);
-    if (!progs.length) continue;
-    const og = document.createElement('optgroup');
-    og.label = GENRES[g][getLang()] ?? GENRES[g].en;
-    for (const p of progs) {
-      const keyHint = Number.isInteger(p.key)
-        ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})`
-        : '';
-      og.append(new Option(p.label + keyHint, p.id));
-    }
-    sel.append(og);
-  }
   if (!STANDARDS.some(p => p.id === setup.song)) setup.song = STANDARDS[0].id;
-  sel.value = setup.song;
+  fillSongSelect(q('sgSongSearch').value);
   segRow(q('sgMode'), [
     { id: 'follow', label: s('follow') },
     { id: 'mic', label: s('micScore') },

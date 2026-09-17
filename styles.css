@@ -373,6 +373,23 @@ input:focus-visible, select:focus-visible {
    never overflow the card on narrow phones */
 .chip-row > .gt-select { flex: 1; min-width: 0; max-width: 100%; }
 
+/* song search — quieter sibling of .gt-select sitting above the picker */
+.gt-search {
+  background: var(--bg2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 5px 10px;
+  min-height: 36px;
+  font-family: var(--sans);
+  font-size: 13px;
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+.gt-search::placeholder { color: var(--dim); }
+.gt-search:focus-visible { border-color: var(--accent); }
+
 /* library */
 .picker { margin-bottom: 14px; }
 .library-body {
