@@ -1825,4 +1825,31 @@ export const STANDARDS = [
       { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' },
     ],
   },
+  {
+    // Once (2007) — Glen Hansard & Markéta Irglová. Common guitar key C
+    // (also played in D). I–IV verse, vi–V–IV–V bridge, I–IV–vi–IV chorus.
+    id: 'falling-slowly', label: 'Falling Slowly', genre: 'folk', key: 0,
+    bars: [
+      // Verse: | C | F | C | F | ×2
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      // Bridge ("games that never amount…"): | Am | G | F | G | ×2
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      // Chorus ("take this sinking boat…"): | C | F | Am | F | ×2
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      // Post ("falling slowly, eyes that know me…"): | C | F | C | F |
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
+      // Bridge 2 ("you have suffered enough…"): | Am | G | F | G | Am | G | F | F |
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
+      { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
+      // Chorus again
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      // Outro ("sing your melody, I'll sing along"): | C | F | Am | F | C |
+      { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
+      { off: 0, q: '' },
+    ],
+  },
 ];
