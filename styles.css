@@ -1188,6 +1188,19 @@ input:focus-visible, select:focus-visible {
   .chart-cell, .chart-sym, .chart-beats i { transition: none; }
 }
 
+/* play-assist controls: ↺ restart, ⏸/▶ pause-resume, End. The header row
+   wraps on narrow screens; .ghost already carries the 44px min-height, so
+   the icon buttons just need a matching min-width. */
+#sgRun .run-top { flex-wrap: wrap; gap: 8px; }
+.run-ctl { display: flex; gap: 6px; }
+.sg-icon { min-width: 44px; padding: 10px 12px; font-size: 15px; }
+/* paused: the chart dims but the current cell/slot stays lit */
+#sgRun.paused .chart-scroll { opacity: .62; }
+/* chart cells + symbols are tappable: cell background seeks to the bar's
+   first slot, a symbol seeks AND auditions its voice-led voicing */
+.chart-cell, .chart-sym { cursor: pointer; user-select: none; }
+.chart-sym:hover { background: rgba(232, 163, 61, .12); }
+
 /* ============ fretboard game (#fretBody, js/screens/fretboardGame.js) ============
    The run card is wider than the 560px .setup-card so the 15-fret SVG keeps
    big tappable cells; on phones the .board rules already scroll it. */

@@ -46,6 +46,14 @@ const STR = {
     missed: '놓친 코드',
     followResult: '연습 완료 — 채점하려면 마이크 채점을 켜세요.',
     standards: '재즈 스탠다드',
+    pause: '일시정지',
+    resume: '재개',
+    restart: '처음부터',
+    loops: '반복',
+    loop1: '1번',
+    loop2: '2번',
+    loop3: '3번',
+    loopInf: '계속',
   },
   en: {
     song: 'Song',
@@ -67,10 +75,18 @@ const STR = {
     missed: 'Missed',
     followResult: 'Run complete — turn on mic scoring to be graded.',
     standards: 'Jazz standards',
+    pause: 'Pause',
+    resume: 'Resume',
+    restart: 'Restart',
+    loops: 'Loops',
+    loop1: '1×',
+    loop2: '2×',
+    loop3: '3×',
+    loopInf: '∞',
   },
 };
 
-const setup = { song: STANDARDS[0].id, bpm: 120, mic: false };
+const setup = { song: STANDARDS[0].id, bpm: 120, mic: false, loops: 2 };
 
 let body = null;                 // #songsBody
 let panel = 'setup';             // 'setup' | 'run' | 'result'
@@ -126,6 +142,8 @@ function render() {
         <span id="sgBpmVal" class="mono">${setup.bpm}</span></div>
       <div class="chip-row"><span class="row-label" data-s="mode"></span>
         <span id="sgMode" class="seg"></span></div>
+      <div class="chip-row"><span class="row-label" data-s="loops"></span>
+        <span id="sgLoops" class="seg"></span></div>
       <p class="hint" data-s="hint"></p>
       <button id="sgStart" class="primary big" data-s="start"></button>
     </div>
@@ -134,7 +152,11 @@ function render() {
       <div class="run-top">
         <span id="sgBars" class="mono"></span>
         <span id="sgScore" class="mono"></span>
-        <button id="sgEnd" class="ghost" data-s="end"></button>
+        <span class="run-ctl">
+          <button id="sgRestart" class="ghost sg-icon" data-st="restart">↺</button>
+          <button id="sgPause" class="ghost sg-icon" data-st="pause">⏸</button>
+          <button id="sgEnd" class="ghost" data-s="end"></button>
+        </span>
       </div>
       <div class="run-bar" aria-hidden="true"><i></i></div>
       <div class="sg-nowbar"><span id="sgNow" class="sg-now"></span></div>
@@ -173,6 +195,8 @@ function setBpm(v) {
 function wire() {
   q('sgStart').addEventListener('click', startSession);
   q('sgEnd').addEventListener('click', endSession);
+  q('sgPause').addEventListener('click', togglePause);
+  q('sgRestart').addEventListener('click', restartSession);
   q('sgAgain').addEventListener('click', () => { session = null; showPanel('setup'); });
   q('sgSong').addEventListener('change', () => { setup.song = q('sgSong').value; });
   q('sgBpm').addEventListener('input', () => setBpm(+q('sgBpm').value));
@@ -185,6 +209,12 @@ function wire() {
 
 function fillStrings() {
   body.querySelectorAll('[data-s]').forEach(el => { el.textContent = s(el.dataset.s); });
+  // icon buttons carry their label in title/aria (text is a glyph)
+  body.querySelectorAll('[data-st]').forEach(el => {
+    el.title = s(el.dataset.st);
+    el.setAttribute('aria-label', s(el.dataset.st));
+  });
+  paintPauseBtn();
 }
 
 function showPanel(p) {
@@ -228,6 +258,14 @@ function renderSetupRows() {
     { id: 'follow', label: s('follow') },
     { id: 'mic', label: s('micScore') },
   ], setup.mic ? 'mic' : 'follow', id => { setup.mic = id === 'mic'; });
+  // lap count for the run: 1/2/3 passes or ∞ (play until End)
+  segRow(q('sgLoops'), [
+    { id: '1', label: s('loop1') },
+    { id: '2', label: s('loop2') },
+    { id: '3', label: s('loop3') },
+    { id: 'inf', label: s('loopInf') },
+  ], setup.loops === Infinity ? 'inf' : String(setup.loops),
+    id => { setup.loops = id === 'inf' ? Infinity : +id; });
 }
 
 // ---------- session ----------
@@ -278,7 +316,12 @@ async function startSession() {
       ci: 0,                       // index into items of the sounding chord
       itemLeft: items[0].beats,    // beats left in items[ci]
       sb: -1,                      // session beat (-1 until the count-in ends)
+      beatShift: -4,               // sb = metro beatIndex + beatShift
+      seekBeat: -1,                // beat a seek/resume pre-positioned (re-sounds, no re-tick)
       countin: true,
+      paused: false,
+      loops: setup.loops,          // laps to play (Infinity = until End)
+      loopsDone: 0,                // laps completed so far
       micOn: setup.mic,
       done: false,
       scored: 0, hits: 0, streak: 0, best: 0, missed: [],
@@ -299,19 +342,33 @@ async function startSession() {
 
 // Fires ~120ms before the beat sounds — schedule the count-in flash, the
 // item tick, the beat pip, and (on bar lines) the cell highlight + scroll
-// on the wall clock. Beats past the song's length trigger the result panel.
+// on the wall clock. `beatShift` maps the metronome's beatIndex to a
+// session beat: -4 fresh (the first bar is the count-in), or the resume/
+// seek position when the clock restarts mid-song. Crossing a lap boundary
+// either wraps the chart (loops remain) or ends the run.
 function onBeat(beatIndex, audioTime) {
-  if (!session || session.done) return;
+  const se = session;
+  if (!se || se.done || se.paused) return;
   const delay = Math.max(0, (audioTime - audioCtx().currentTime) * 1000);
-  if (beatIndex < 4) { later(() => showCountin(4 - beatIndex), delay); return; }
-  const sb = beatIndex - 4;                  // session beat; 0 = bar 0 beat 1
-  if (sb >= session.totalBeats) { later(() => endSong(), delay); return; }
+  const sb = beatIndex + se.beatShift;
+  if (sb < 0) { later(() => showCountin(-sb), delay); return; }
+  const lap = Math.floor(sb / se.totalBeats);
+  if (lap >= se.loops) { later(() => endSong(), delay); return; }
+  if (lap > se.loopsDone) {
+    se.loopsDone = lap;
+    // close the lap's last item, then wipe every mark for the new lap
+    later(() => {
+      scoreItem(se.items[se.items.length - 1], false);
+      resetLap();
+    }, delay);
+  }
+  const pos = sb % se.totalBeats;
   // tickItem first so the cell/pip paint sees the item pointer already on
   // the sounding chord; barStart before beatNow so the bar-0 pip lights —
   // countin only clears inside barStart
-  later(() => tickItem(sb), delay);
-  if (sb % 4 === 0) later(() => barStart(sb), delay);
-  later(() => beatNow(sb % 4), delay);
+  later(() => tickItem(pos), delay);
+  if (pos % 4 === 0) later(() => barStart(pos), delay);
+  later(() => beatNow(pos % 4), delay);
 }
 
 // Per-session-beat item bookkeeping: each item holds for `beats` beats —
@@ -320,6 +377,14 @@ function onBeat(beatIndex, audioTime) {
 function tickItem(sb) {
   const se = session;
   if (!se || se.done) return;
+  if (sb === se.seekBeat) {
+    // a seek/resume already placed ci/itemLeft on this beat — re-sound the
+    // item (itemStart) without consuming a beat or re-scoring the last one
+    se.seekBeat = -1;
+    se.sb = sb;
+    itemStart();
+    return;
+  }
   se.sb = sb;
   if (sb === 0) { se.ci = 0; se.itemLeft = se.items[0].beats; }
   else if (--se.itemLeft > 0) return;        // still inside the item
@@ -428,6 +493,8 @@ function paintRun() {
   }
   q('sgBpmLive').value = setup.bpm;
   q('sgBpmLiveVal').textContent = setup.bpm;
+  q('sgRun').classList.toggle('paused', !!session.paused);
+  paintPauseBtn();
   paintScore();
 }
 
@@ -447,6 +514,11 @@ function buildChart() {
       const sp = document.createElement('span');
       sp.className = 'chart-sym' + (cell.slots.length > 1 ? ' half' : '');
       sp.textContent = it.sym;
+      // symbol tap = audition the voicing + seek to the slot
+      sp.addEventListener('click', e => {
+        e.stopPropagation();
+        seekToItem(slotIdx, true);
+      });
       it.el = sp;
       syms.append(sp);
     });
@@ -454,6 +526,8 @@ function buildChart() {
     beats.className = 'chart-beats';
     beats.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < 4; i++) beats.append(document.createElement('i'));
+    // cell background tap = seek to the bar's first slot (no audition)
+    el.addEventListener('click', () => seekToItem(cell.slots[0]));
     el.append(syms, beats);
     grid.append(el);
     return el;
@@ -470,6 +544,153 @@ function paintScore() {
   const rb = q('sgRun')?.querySelector('.run-bar > i');
   if (rb) rb.style.width =
     `${Math.min(100, Math.max(0, se.sb) / se.totalBeats * 100)}%`;
+}
+
+// ---------- play assist: pause/resume, restart, tap-to-seek ----------
+
+// session beat on which an item starts (sum of earlier items' lengths)
+function itemBeat(se, idx) {
+  let b = 0;
+  for (let i = 0; i < idx; i++) b += se.items[i].beats;
+  return b;
+}
+
+// (Re)start the metronome clock so its next beat lands on session beat sb.
+// seekBeat marks it as pre-positioned: tickItem re-sounds the item instead
+// of consuming a beat.
+function startClockAt(sb) {
+  const se = session;
+  se.beatShift = sb;
+  se.seekBeat = sb;
+  metro = metro || new Metronome(onBeat);
+  metro.start(setup.bpm, 4);
+}
+
+// Tap a cell → jump to that bar's first slot; tap a .chart-sym → same plus
+// the voice-led reference strum. Verdicts at/after the target are cleared
+// (earlier marks stay), the tally is rebuilt from the surviving marks, and
+// a paused run seeks in place — staying paused with the position lit.
+function seekToItem(idx, sound = false) {
+  const se = session;
+  if (!se || se.done) return;
+  const it = se.items[idx];
+  if (!it) return;
+  metro?.stop();
+  for (const id of timers) clearTimeout(id);
+  timers.clear();
+  if (sound && it.voicing) playVoicing(it.voicing);
+  for (let i = idx; i < se.items.length; i++) {
+    const x = se.items[i];
+    x.done = false;
+    x.passed = false;
+    x.el?.classList.remove('good', 'miss', 'snd');
+  }
+  se.scored = se.items.filter(x => x.done).length;
+  se.hits = se.items.filter(x => x.passed).length;
+  se.missed = se.items.filter(x => x.done && !x.passed).map(x => x.sym);
+  se.streak = 0;
+  for (let i = idx - 1; i >= 0; i--) {
+    const x = se.items[i];
+    if (!x.done || !x.passed) break;
+    se.streak++;
+  }
+  const sb = itemBeat(se, idx);
+  se.ci = idx;
+  se.itemLeft = it.beats;
+  se.sb = sb;
+  se.countin = false;            // a seek never re-runs the count-in
+  voteRing = [];
+  clearLive();                   // pip + countin overlay
+  const bar = sb >> 2;
+  cellEls.forEach((c, i) => {
+    c.classList.toggle('past', i < bar);
+    c.classList.toggle('cur', i === bar);
+  });
+  it.el?.classList.add('snd');
+  q('sgNow').textContent = it.sym;
+  const fb = q('sgFeedback');
+  if (fb) {
+    fb.textContent = se.paused ? s('pause')
+      : se.micOn ? s('listening') : s('followAlong');
+    fb.className = 'feedback sg-fb';
+  }
+  const cell = cellEls[bar];
+  const box = q('sgChart');
+  if (cell && box) {
+    box.scrollTo({
+      top: cell.offsetTop - (box.clientHeight - cell.offsetHeight) / 2,
+      behavior: 'smooth',
+    });
+  }
+  paintScore();
+  if (!se.paused) startClockAt(sb);
+  else { se.beatShift = sb; se.seekBeat = sb; }
+}
+
+// New lap: every cell/slot mark clears so the chart looks fresh; the
+// run's score tally keeps accumulating across laps.
+function resetLap() {
+  const se = session;
+  if (!se || se.done) return;
+  se.items.forEach(it => {
+    it.done = false;
+    it.passed = false;
+    it.el?.classList.remove('good', 'miss', 'snd');
+  });
+  cellEls.forEach(c => c.classList.remove('cur', 'past'));
+}
+
+// ⏸/▶ — pause freezes the clock, the poll, and every pending visual; the
+// chart dims but keeps the current cell lit. Resume restarts the clock on
+// the paused beat (a paused count-in simply counts in again from 4).
+function togglePause() {
+  const se = session;
+  if (!se || se.done) return;
+  if (se.paused) {
+    se.paused = false;
+    q('sgRun').classList.remove('paused');
+    if (se.countin) {
+      se.beatShift = -4;
+      metro = metro || new Metronome(onBeat);
+      metro.start(setup.bpm, 4);
+    } else {
+      startClockAt(Math.max(0, se.sb));
+    }
+    if (se.micOn) startPoll();
+  } else {
+    se.paused = true;
+    metro?.stop();
+    for (const id of timers) clearTimeout(id);
+    timers.clear();
+    stopPoll();
+    clearLive();
+    q('sgRun').classList.add('paused');
+    const fb = q('sgFeedback');
+    if (fb) { fb.textContent = s('pause'); fb.className = 'feedback sg-fb'; }
+  }
+  paintPauseBtn();
+}
+
+function paintPauseBtn() {
+  const b = q('sgPause');
+  if (!b) return;
+  const paused = !!(session && session.paused && !session.done);
+  b.textContent = paused ? '▶' : '⏸';
+  const lbl = s(paused ? 'resume' : 'pause');
+  b.title = lbl;
+  b.setAttribute('aria-label', lbl);
+}
+
+// ↺ — fresh session, same setup: bar 0 with the count-in, marks cleared.
+// The mic stays open; mic.start() is a no-op while it's already running.
+function restartSession() {
+  if (!session || starting) return;
+  stopPoll();
+  metro?.stop(); metro = null;
+  for (const id of timers) clearTimeout(id);
+  timers.clear();
+  session = null;
+  startSession();
 }
 
 // ---------- mic scoring ----------
@@ -550,8 +771,11 @@ function endSession() {          // "끝내기" — stop the clock, show stats
   if (!session) { showPanel('setup'); return; }
   cleanupAudio();
   clearLive();
+  session.paused = false;
+  q('sgRun')?.classList.remove('paused');
   session.done = true;
-  if (session.sb <= 0) { showPanel('setup'); return; }  // nothing played
+  // nothing played → back to setup (pos 0 mid-lap still counts as played)
+  if (session.sb <= 0 && !session.loopsDone) { showPanel('setup'); return; }
   showPanel('result');
   paintResult();
 }
@@ -573,7 +797,8 @@ function endSong() {
 function paintResult() {
   const se = session;
   const barsDone = Math.min(Math.max(0, se.sb >> 2) + 1, se.cells.length);
-  const head = `${se.song.label} — ${s('bars')}: ${barsDone}/${se.cells.length}<br>`;
+  const head = `${se.song.label} — ${s('bars')}: ${barsDone}/${se.cells.length}` +
+    (se.loops !== 1 ? ` · ${s('loops')}: ${se.loopsDone}` : '') + '<br>';
   if (!se.micOn) {
     q('sgResultBody').innerHTML =
       head + `<span style="color:var(--dim)">${s('followResult')}</span>`;
@@ -595,6 +820,15 @@ export function initSongs() {
   body = document.getElementById('songsBody');
   render();
   onLangChange(render);          // rebuild labels; session state survives
+  // spacebar = pause/resume while the run panel is up — never inside form
+  // fields, and never on a focused button (it would click AND toggle)
+  document.addEventListener('keydown', e => {
+    if (e.code !== 'Space' || e.repeat || panel !== 'run' || !session || session.done) return;
+    const tag = e.target && e.target.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA' || tag === 'BUTTON') return;
+    e.preventDefault();
+    togglePause();
+  });
 }
 
 // app.js calls this when leaving the songs tab: release the metronome, the
@@ -602,7 +836,9 @@ export function initSongs() {
 export function suspendSongs() {
   cleanupAudio();
   clearLive();
+  q('sgRun')?.classList.remove('paused');
   if (session && !session.done) {
+    session.paused = false;
     session.done = true;
     showPanel('setup');
   }
