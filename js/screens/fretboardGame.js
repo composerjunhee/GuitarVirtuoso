@@ -277,9 +277,10 @@ function pickRound() {
     se.positions = positionsOfPc(pc, se.lo, se.hi);
   }
   // display name + stats key. The stats key stays Latin so it doesn't
-  // fork when the UI language changes (same convention as chord symbols).
+  // fork when the UI language changes (same convention as chord symbols),
+  // and carries a 'note:' prefix so stats.js can tell it from a chord.
   se.sym = pcName(se.pc, opts());
-  se.stat = pcName(se.pc, { flat: settings.flat, lang: 'en' });
+  se.stat = 'note:' + pcName(se.pc, { flat: settings.flat, lang: 'en' });
 }
 
 // ---------- board ----------
@@ -477,7 +478,7 @@ export function initFretGame() {
     // a mid-run settings change re-spells the live round too
     if (session && !session.done && session.round > 0) {
       session.sym = pcName(session.pc, opts());
-      session.stat = pcName(session.pc, { flat: settings.flat, lang: 'en' });
+      session.stat = 'note:' + pcName(session.pc, { flat: settings.flat, lang: 'en' });
       renderRound();
     }
   });

@@ -447,6 +447,9 @@ function pickHighlow() {
   session.lastKey = key;
   session.notes = [root, second];
   session.hl = key;
+  // stat:false → resolve() skips recordAttempt for this drill; the pair
+  // label "E → G" was only noise in the stats list
+  session.stat = false;
   session.sym = `${midiName(root, opts())} → ${midiName(second, opts())}`;
 }
 
@@ -465,7 +468,7 @@ function pickInterval() {
   session.notes = [root, second];
   session.semis = semis;
   const sym = INTERVAL_LABEL[semis];
-  session.stat = sym;                    // stats key = "M3", "P5", …
+  session.stat = 'iv:' + sym;            // stats key = "iv:M3", "iv:P5", …
   session.sym = session.ivDir === 'harm'
     ? `${midiName(root, opts())} + ${midiName(second, opts())} (${sym})`
     : `${midiName(root, opts())} → ${midiName(second, opts())} (${sym})`;
@@ -486,7 +489,7 @@ function pickProg() {
   // chord's top voicing so the sequence never goes silent
   const led = voiceLead(session.chords);
   session.seq = session.chords.map((c, i) => led[i] ?? voicingsFor(c)[0] ?? null);
-  session.stat = prog.label;
+  session.stat = 'prog:' + prog.label;
   session.sym =
     `${pcName(keyPc, { flat: preferFlat(keyPc), lang: getLang() })} — ${prog.label}`;
 }
@@ -638,7 +641,7 @@ function resolve(correct, picked) {
   stopPoll();
   const dt = performance.now() - se.t0;
   se.results.push({ sym: se.sym, correct, dt });
-  recordAttempt(se.stat ?? se.sym, correct, dt);
+  if (se.stat !== false) recordAttempt(se.stat ?? se.sym, correct, dt);
   se.streak = correct ? se.streak + 1 : 0;
   se.best = Math.max(se.best, se.streak);
   paintScore();

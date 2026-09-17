@@ -112,7 +112,9 @@ function resolveDeck() {
   if (setup.deck === 'weak') {
     const s = loadStats();
     return Object.entries(s)
-      .filter(([, e]) => e.att > 0 && e.box <= 2)
+      // parseable chord symbols only — interval/note/prog stat keys must
+      // not crowd real chords out of the 10-slot weak deck
+      .filter(([sym, e]) => e.att > 0 && e.box <= 2 && parseSymbol(sym))
       .sort((a, b) => a[1].box - b[1].box || (a[1].ok / a[1].att) - (b[1].ok / b[1].att))
       .slice(0, 10).map(([sym]) => sym);
   }

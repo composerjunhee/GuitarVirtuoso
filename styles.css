@@ -683,6 +683,68 @@ input:focus-visible, select:focus-visible {
   .stat-row { grid-template-columns: minmax(56px, auto) 1fr auto; }
   .stat-row .box-dots { grid-column: 2; }        /* dots tuck under the bar */
 }
+/* collapsible mastery-group headers + expandable compact rows */
+.stat-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  cursor: pointer;
+  color: var(--dim);
+  font-size: 13px;
+  user-select: none;
+}
+.stat-group .chev { font-family: var(--mono); width: 12px; }
+.stat-rows { display: flex; flex-direction: column; gap: 6px; }
+.stat-rows[hidden] { display: none; }          /* display:flex beats [hidden] */
+.stat-row { cursor: pointer; }
+.stat-sub {                                   /* subline reveals on .open */
+  grid-column: 1 / -1;
+  margin: 0;
+  display: none;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.stat-row.open .stat-sub { display: flex; }
+/* chord skill map: 12 roots × 7 quality families inside .stats-list */
+.stats-heatmap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.hm-title { color: var(--dim); font-size: 13px; margin-bottom: 6px; }
+.hm-grid {
+  display: grid;
+  grid-template-columns: minmax(18px, auto) repeat(7, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+.hm-head, .hm-root {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
+.hm-head { text-align: center; }
+.hm-cell {
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, .18);             /* unpracticed */
+}
+.hm-weak   { background: rgba(217, 106, 90, .55); border-color: var(--bad); }
+.hm-learn  { background: rgba(232, 163, 61, .50); border-color: var(--accent); }
+.hm-master { background: rgba(143, 191, 106, .50); border-color: var(--good); }
+.hm-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.hm-legend .hint { display: inline-flex; align-items: center; gap: 5px; }
+.hm-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  background: rgba(0, 0, 0, .18);
+}
 
 /* ============ strum trainer (#strumBody, js/screens/strum.js) ============ */
 .strum-pat {

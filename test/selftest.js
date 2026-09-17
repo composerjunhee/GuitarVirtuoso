@@ -535,6 +535,24 @@ export async function runAll(report = console.log) {
     ok(allOk, 'all preset progressions voice-lead (keys C/G/F)');
   }
 
+  // -- stats screen: stat-key classifier (pure, no DOM needed) --
+  report('stats types');
+  const st = await import('../js/screens/stats.js');
+  ok(st.typeOf('Cmaj7') === 'chord' && st.typeOf('F#m7b5') === 'chord' &&
+    st.typeOf('Am/G') === 'chord' && st.typeOf('E') === 'chord',
+    'typeOf: bare chord symbols');
+  ok(st.typeOf('note:C') === 'note' && st.typeOf('note:F#') === 'note',
+    'typeOf: note: prefix');
+  ok(st.typeOf('iv:M3') === 'interval' && st.typeOf('iv:P8') === 'interval' &&
+    st.typeOf('M3') === 'interval' && st.typeOf('TT') === 'interval',
+    'typeOf: iv: prefix + legacy bare labels');
+  ok(st.typeOf('prog:I–V–vi–IV') === 'prog' &&
+    st.typeOf('I–V–vi–IV') === 'prog' && st.typeOf('12-bar blues') === 'prog',
+    'typeOf: prog: prefix + legacy labels');
+  ok(st.typeOf('E → G') === 'junk' && st.typeOf('A → B') === 'junk',
+    'typeOf: highlow pair keys are junk');
+  ok(st.typeOf('???') === 'other', 'typeOf: unknown → other');
+
   // -- song mode: chart bar layout (pure helper, no DOM needed) --
   report('song mode');
   const songs = await import('../js/screens/songs.js');
