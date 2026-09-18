@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v14';  // beat-lane highlight + in-chart editing + save custom charts
+const CACHE = 'gv-v15';  // ear trainer: 4-beat count-in before each round
 
 const ASSETS = [
   './',

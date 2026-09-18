@@ -37,17 +37,7 @@ export class Metronome {
     }
   }
 
-  _click(t, accent) {
-    const ctx = audioCtx();
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.frequency.value = accent ? 1500 : 1000;
-    g.gain.setValueAtTime((accent ? 0.5 : 0.32) * (settings.volMetro ?? 1), t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    osc.connect(g).connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + 0.06);
-  }
+  _click(t, accent) { clickAt(t, accent); }
 
   get running() { return !!this._timer; }
 
@@ -55,4 +45,19 @@ export class Metronome {
     clearInterval(this._timer);
     this._timer = null;
   }
+}
+
+// One metronome tick at absolute audio-clock time `t` — also used by the
+// ear trainer's 4-beat count-in (it schedules clicks without a running
+// Metronome). Honors the metronome volume setting like everything else.
+export function clickAt(t, accent) {
+  const ctx = audioCtx();
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.frequency.value = accent ? 1500 : 1000;
+  g.gain.setValueAtTime((accent ? 0.5 : 0.32) * (settings.volMetro ?? 1), t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  osc.connect(g).connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + 0.06);
 }

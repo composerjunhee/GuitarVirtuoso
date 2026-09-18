@@ -18,6 +18,7 @@ import { segRow, rootPicker, groupedChips, QUALITY_GROUPS, showBanner }
 import { mic } from '../audio/input.js';
 import { profileFromSpectrum, matchChord } from '../audio/chordDetect.js';
 import { playVoicing, playNote } from '../audio/pluck.js';
+import { clickAt } from '../audio/metronome.js';
 import { audioCtx } from '../audio/engine.js';
 import { t, getLang, onLangChange } from '../i18n.js';
 import { settings, recordAttempt } from '../state.js';
@@ -197,6 +198,13 @@ let panel = 'setup';             // 'setup' | 'run' | 'result'
 let session = null;
 let pollTimer = null;
 let advanceTimer = null;
+let countTimer = null;             // fires the round's sound after count-in
+let countTimers = new Set();       // count-in overlay flash timeouts
+
+// 4 metronome clicks before each round's sound — a chord that lands on a
+// beat is far easier to place than one that arrives by surprise. 84 bpm
+// is brisk enough to keep rounds moving, slow enough to settle on.
+const COUNT_BPM = 84, COUNT_BEATS = 4;
 let voteRing = [];               // sliding window of recent match results
 let seenOnset = 0;               // last onset timestamp the vote consumed
 
@@ -231,6 +239,7 @@ function render() {
       <button id="earStart" class="primary big" data-s="start"></button>
     </div>
     <div id="earRun" class="setup-card" hidden>
+      <div id="earCountin" class="countin" hidden aria-hidden="true"></div>
       <div class="run-top">
         <span id="earProgress" class="mono"></span>
         <span><span id="earScore" class="mono"></span>&ensp;<span id="earStreak" class="mono"></span></span>
@@ -385,9 +394,10 @@ function nextRound() {
   session.stat = null;
   voteRing = [];
   pickRound();
-  session.t0 = performance.now();
   renderRound();
-  playCurrent();
+  // t0 (response-time stat) starts when the sound actually plays, not at
+  // the top of the count-in
+  playCountIn(() => { session.t0 = performance.now(); playCurrent(); });
   if (session.type === 'play') startPoll();
 }
 
@@ -492,6 +502,44 @@ function pickProg() {
   session.stat = 'prog:' + prog.label;
   session.sym =
     `${pcName(keyPc, { flat: preferFlat(keyPc), lang: getLang() })} — ${prog.label}`;
+}
+
+// 4-click count-in, then `then`. Clicks are scheduled on the audio clock;
+// the overlay flashes 4·3·2·1 via tracked timeouts so a tab switch or an
+// early End can tear them down. If the round ends first, the pending
+// sound simply never fires.
+function playCountIn(then) {
+  const ctx = audioCtx();
+  const spb = 60 / COUNT_BPM;
+  const t0 = ctx.currentTime + 0.06;
+  for (let i = 0; i < COUNT_BEATS; i++) clickAt(t0 + i * spb, i === 0);
+  const later = (fn, ms) => {
+    const id = setTimeout(() => { countTimers.delete(id); fn(); }, ms);
+    countTimers.add(id);
+  };
+  for (let i = 0; i < COUNT_BEATS; i++) {
+    const n = COUNT_BEATS - i;
+    later(() => flashCountin(n), (t0 - ctx.currentTime + i * spb) * 1000);
+  }
+  const end = (t0 - ctx.currentTime + COUNT_BEATS * spb) * 1000;
+  later(() => flashCountin(0), end);
+  countTimer = setTimeout(() => {
+    countTimer = null;
+    if (session && !session.done && !session.resolved) then();
+  }, end);
+}
+
+// Big flashing number over the run card — same .countin/.tick contract
+// as the songs screen. 0 hides the overlay.
+function flashCountin(n) {
+  const el = q('earCountin');
+  if (!el) return;
+  if (!n) { el.hidden = true; return; }
+  el.textContent = n;
+  el.hidden = false;
+  el.classList.remove('tick');
+  void el.offsetWidth;
+  el.classList.add('tick');
 }
 
 // Strum each voicing gapMs apart. Everything is scheduled on the
@@ -723,6 +771,10 @@ function paintHeard(res) {
 function cleanupAudio() {
   stopPoll();
   clearTimeout(advanceTimer); advanceTimer = null;
+  clearTimeout(countTimer); countTimer = null;
+  countTimers.forEach(clearTimeout); countTimers.clear();
+  const ci = q('earCountin');
+  if (ci) ci.hidden = true;
   if (mic.running) mic.stop();
 }
 

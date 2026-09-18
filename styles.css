@@ -1138,7 +1138,7 @@ input:focus-visible, select:focus-visible {
    bar counts in. JS re-adds .tick each beat to restart the pulse; with
    prefers-reduced-motion the number just swaps (no animation is defined).
    pointer-events:none keeps the End button reachable mid-count-in. */
-#stRun, #practiceRun, #sgRun { position: relative; }
+#stRun, #practiceRun, #sgRun, #earRun { position: relative; }
 .countin {
   position: absolute;
   inset: 0;
