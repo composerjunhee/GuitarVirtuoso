@@ -646,6 +646,38 @@ export async function runAll(report = console.log) {
     ok(!!GENRES.custom && Object.keys(GENRES).at(-1) === 'custom',
       'GENRES.custom exists as the last group');
   }
+  { // capoSuggest: friendly keys (major C G D A E / minor Am Em Dm Bm)
+    // need nothing → null; otherwise the SMALLEST capo to a friendly
+    // played key wins (Bb major: capo 1 → A shapes, not capo 3 → G)
+    const cs = songs.capoSuggest;
+    ok(cs(7) === null && cs(0) === null && cs(9, true) === null,
+      'capoSuggest: already-friendly keys → null');
+    const bb = cs(10);
+    ok(bb && bb.capo === 1 && bb.playedPc === 9,
+      'capoSuggest: Bb → capo 1, A shapes', JSON.stringify(bb));
+    const fsm = cs(6, true);
+    ok(fsm && fsm.capo === 2 && fsm.playedPc === 4,
+      'capoSuggest: F#m → capo 2, Em shapes', JSON.stringify(fsm));
+    ok([...Array(12).keys()].every(pc => [false, true].every(m => {
+      const r = cs(pc, m);
+      return !r || (r.capo >= 1 && r.capo <= 7 &&
+        r.playedPc === ((pc - r.capo) % 12 + 12) % 12);
+    })), 'capoSuggest: every result is a valid {capo 1-7, playedPc}');
+  }
+  { // transpose/capo math the session relies on: resolving bars at a new
+    // tonic shifts every chord by the delta; playedKey = sounding - capo
+    const al = STANDARDS.find(x => x.id === 'autumn-leaves');   // Gm (7)
+    const delta = (10 - al.key + 12) % 12;                      // G → Bb
+    ok(al.bars.every(b =>
+      makeChord(10 + b.off, b.q).root ===
+        (makeChord(al.key + b.off, b.q).root + delta) % 12),
+      'transpose: every chord shifts by the key delta');
+    const played = (10 - 3 + 12) % 12;                          // Bb capo 3 → G
+    ok(played === 7 && al.bars.every(b =>
+      makeChord(played + b.off, b.q).root ===
+        ((makeChord(10 + b.off, b.q).root - 3) + 12) % 12),
+      'capo: played shapes sit a capo below sounding');
+  }
 
   // -- fretboard game: position math (pure helpers, no DOM needed) --
   report('fretboard game');

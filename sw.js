@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v20';  // idiomatic voicings: 56 movable shapes + 40 open grips
+const CACHE = 'gv-v21';  // idiomatic voicings: 56 movable shapes + 40 open grips
 
 const ASSETS = [
   './',

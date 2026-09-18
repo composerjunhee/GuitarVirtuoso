@@ -65,6 +65,13 @@ const STR = {
     savePh: '새 악보 이름',
     saved: '저장됨',
     slotAt: (n, b) => `${n}마디 · ${b}박`,
+    key: '키',
+    capo: '카포',
+    none: '없음',
+    origKey: k => `원곡: ${k}`,
+    shapes: k => `${k} 쉐입`,
+    capoSug: (n, k) => `카포 ${n} → ${k} 쉐입?`,
+    capoRun: (snd, n, pl) => `실제음 ${snd} · 카포 ${n} · ${pl} 쉐입`,
   },
   en: {
     song: 'Song',
@@ -104,6 +111,13 @@ const STR = {
     savePh: 'New chart name',
     saved: 'Saved',
     slotAt: (n, b) => `bar ${n} · beat ${b}`,
+    key: 'Key',
+    capo: 'Capo',
+    none: 'None',
+    origKey: k => `orig: ${k}`,
+    shapes: k => `${k} shapes`,
+    capoSug: (n, k) => `capo ${n} → ${k} shapes?`,
+    capoRun: (snd, n, pl) => `sounds ${snd} · capo ${n} · ${pl} shapes`,
   },
 };
 
@@ -123,7 +137,11 @@ const SEC = {
   },
 };
 
-const setup = { song: STANDARDS[0].id, bpm: 120, mic: false, loops: 2 };
+const setup = {
+  song: STANDARDS[0].id, bpm: 120, mic: false, loops: 2,
+  key: STANDARDS[0].key,   // sounding tonic — defaults to the song's own
+  capo: 0,                 // 0 = no capo; 1-7 slides the shown shapes down
+};
 
 const LS_SONGS = 'gt.songs';     // saved custom charts (progBuilder pattern)
 
@@ -177,6 +195,33 @@ export function barCells(song) {
   return cells;
 }
 
+// ---------- transpose + capo (pure helpers, exported for the selftest) ----------
+
+// Guitar-open-friendly keys per mode — the sets capoSuggest() targets.
+// A capo slides the fingered shapes DOWN from the sounding key, so
+// playedPc = (soundingPc - capo) mod 12.
+const CAPO_MAJ = new Set([0, 7, 2, 9, 4]);   // C G D A E
+const CAPO_MIN = new Set([9, 4, 2, 11]);     // Am Em Dm Bm
+
+// Smallest capo (1-7) that lands the played shapes on an open-friendly
+// key for the song's mode → {capo, playedPc}; null when the sounding key
+// is already friendly (or nothing within 7 frets is).
+export function capoSuggest(soundingPc, minor = false) {
+  const friendly = minor ? CAPO_MIN : CAPO_MAJ;
+  const pc = ((soundingPc % 12) + 12) % 12;
+  if (friendly.has(pc)) return null;
+  for (let capo = 1; capo <= 7; capo++) {
+    const playedPc = ((pc - capo) % 12 + 12) % 12;
+    if (friendly.has(playedPc)) return { capo, playedPc };
+  }
+  return null;
+}
+
+// tonic label for a song's mode — "Bb" / "Gm" — spelled by the pc's own
+// convention (same path the song dropdown's "(Gm)" label uses)
+const keyLabel = (pc, minor) =>
+  pcName(pc, { flat: preferFlat(pc) }) + (minor ? 'm' : '');
+
 // ---------- DOM ----------
 
 function render() {
@@ -185,6 +230,13 @@ function render() {
       <div class="chip-row"><input id="sgSongSearch" type="search" class="gt-search"></div>
       <div class="chip-row"><span class="row-label" data-s="song"></span>
         <select id="sgSong" class="gt-select"></select></div>
+      <div class="chip-row"><span class="row-label" data-s="key"></span>
+        <select id="sgKey" class="gt-select"></select>
+        <span id="sgKeyOrig" class="hint" hidden></span></div>
+      <div class="chip-row"><span class="row-label" data-s="capo"></span>
+        <select id="sgCapo" class="gt-select"></select>
+        <span id="sgCapoFx" class="hint" hidden></span>
+        <button id="sgCapoSug" class="chip" hidden></button></div>
       <div class="chip-row bpm-row"><span class="row-label">BPM</span>
         <button id="sgBpmDown" class="chip bpm-step" aria-label="BPM down">−</button>
         <input id="sgBpm" type="range" min="40" max="160" value="${setup.bpm}">
@@ -210,7 +262,8 @@ function render() {
         </span>
       </div>
       <div class="run-bar" aria-hidden="true"><i></i></div>
-      <div class="sg-nowbar"><span id="sgNow" class="sg-now"></span></div>
+      <div class="sg-nowbar"><span id="sgNow" class="sg-now"></span>
+        <div id="sgCapoHint" class="hint" hidden></div></div>
       <div id="sgFeedback" class="feedback sg-fb"></div>
       <div id="sgChart" class="chart-scroll"><div id="sgCells" class="chart-grid"></div></div>
       <div id="sgEditBar" class="chip-row wrap sg-editbar" hidden>
@@ -263,7 +316,30 @@ function wire() {
   q('sgPause').addEventListener('click', togglePause);
   q('sgRestart').addEventListener('click', restartSession);
   q('sgAgain').addEventListener('click', () => { session = null; showPanel('setup'); });
-  q('sgSong').addEventListener('change', () => { setup.song = q('sgSong').value; });
+  q('sgSong').addEventListener('change', () => {
+    setup.song = q('sgSong').value;
+    // a new song re-anchors the transpose controls: its canonical key,
+    // and a saved capo if the chart carries one (custom saves do)
+    const song = STANDARDS.find(x => x.id === setup.song);
+    setup.key = Number.isInteger(song?.key) ? song.key : 0;
+    setup.capo = Number.isInteger(song?.capo)
+      ? Math.min(7, Math.max(0, song.capo)) : 0;
+    fillKeySelect();
+    paintSetupKeyCapo();
+  });
+  q('sgKey').addEventListener('change', () => {
+    setup.key = +q('sgKey').value;
+    paintSetupKeyCapo();
+  });
+  q('sgCapo').addEventListener('change', () => {
+    setup.capo = +q('sgCapo').value;
+    paintSetupKeyCapo();
+  });
+  q('sgCapoSug').addEventListener('click', () => {
+    const song = STANDARDS.find(x => x.id === setup.song);
+    const sug = song && capoSuggest(setup.key, song.minor);
+    if (sug) { setup.capo = sug.capo; paintSetupKeyCapo(); }
+  });
   q('sgSongSearch').addEventListener('input', e => fillSongSelect(e.target.value));
   q('sgBpm').addEventListener('input', () => setBpm(+q('sgBpm').value));
   q('sgBpmLive').addEventListener('input', () => setBpm(+q('sgBpmLive').value));
@@ -349,12 +425,65 @@ function fillSongSelect(filter = '') {
   }
 }
 
+// ---------- transpose + capo controls ----------
+
+// sounding-key picker: all 12 tonics, each spelled by its own convention
+// ('m' appended for minor tunes — same convention as the song dropdown's
+// "(Gm)" label). setup.key rides the select's value; a session resolves
+// the chart's offsets against it.
+function fillKeySelect() {
+  const song = STANDARDS.find(x => x.id === setup.song) || STANDARDS[0];
+  if (!Number.isInteger(setup.key)) setup.key = song.key;
+  const sel = q('sgKey');
+  sel.replaceChildren();
+  for (let pc = 0; pc < 12; pc++) {
+    sel.add(new Option(keyLabel(pc, song.minor), pc));
+  }
+  sel.value = String(setup.key);
+}
+
+function fillCapoSelect() {
+  const sel = q('sgCapo');
+  sel.replaceChildren();
+  sel.add(new Option(s('none'), 0));
+  for (let n = 1; n <= 7; n++) sel.add(new Option(String(n), n));
+  sel.value = String(setup.capo);
+}
+
+// repaint the derived bits of the key/capo rows — both selects' values,
+// the "원곡" hint (only when transposed), the shapes the capo yields, and
+// the auto-capo suggestion chip (hidden when the suggestion is already
+// applied or there's none)
+function paintSetupKeyCapo() {
+  const song = STANDARDS.find(x => x.id === setup.song) || STANDARDS[0];
+  q('sgKey').value = String(setup.key);
+  q('sgCapo').value = String(setup.capo);
+  const orig = q('sgKeyOrig');
+  const shifted = setup.key !== song.key;
+  orig.hidden = !shifted;
+  if (shifted) orig.textContent = s('origKey')(keyLabel(song.key, song.minor));
+  const fx = q('sgCapoFx');
+  fx.hidden = !setup.capo;
+  if (setup.capo) {
+    const played = ((setup.key - setup.capo) % 12 + 12) % 12;
+    fx.textContent = s('shapes')(keyLabel(played, song.minor));
+  }
+  const sug = capoSuggest(setup.key, song.minor);
+  const chip = q('sgCapoSug');
+  const show = sug && sug.capo !== setup.capo;
+  chip.hidden = !show;
+  if (show) chip.textContent = s('capoSug')(sug.capo, keyLabel(sug.playedPc, song.minor));
+}
+
 function renderSetupRows() {
   // one optgroup per genre present in the catalog, in GENRES order —
   // same shape as the strum/practice pickers. A song's canonical key
   // rides in the option text: "Autumn Leaves (Gm)".
   if (!STANDARDS.some(p => p.id === setup.song)) setup.song = STANDARDS[0].id;
   fillSongSelect(q('sgSongSearch').value);
+  fillKeySelect();
+  fillCapoSelect();
+  paintSetupKeyCapo();
   segRow(q('sgMode'), [
     { id: 'follow', label: s('follow') },
     { id: 'mic', label: s('micScore') },
@@ -389,8 +518,17 @@ async function startSession() {
       }
     }
     const song = STANDARDS.find(x => x.id === setup.song) || STANDARDS[0];
+    // transpose + capo: bars are offsets from the tonic, so re-rooting at
+    // the sounding key transposes the whole chart; the capo then slides
+    // every shown shape down to playedKey (what the player fingers)
+    const soundingKey = Number.isInteger(setup.key)
+      ? setup.key : (Number.isInteger(song.key) ? song.key : 0);
+    const capo = Math.min(7, Math.max(0, setup.capo | 0));
     session = {
       song,
+      soundingKey,
+      capo,
+      playedKey: ((soundingKey - capo) % 12 + 12) % 12,
       // working copy of the chart — the in-chart editor rewrites these
       // slots and buildFromSlots() re-derives items/cells from them
       slots: song.bars.map(b => ({ off: b.off, q: b.q, beats: slotBeats(b) })),
@@ -432,10 +570,11 @@ async function startSession() {
 // cell grouping. All verdicts start cleared.
 function buildFromSlots() {
   const se = session;
-  // canonical key like the strum/practice pickers; minor-flagged tunes
-  // (Gm, Cm…) are flat keys, so spell with flats
-  const flat = preferFlat(se.song.key) || !!se.song.minor;
-  const chords = se.slots.map(b => makeChord(se.song.key + b.off, b.q));
+  // chords resolve at playedKey — the sounding key slid down by the capo,
+  // so the chart shows the shapes the player fingers (mic scoring targets
+  // them too). Minor-flagged tunes (Gm, Cm…) are flat keys → spell flat.
+  const flat = preferFlat(se.playedKey) || !!se.song.minor;
+  const chords = se.slots.map(b => makeChord(se.playedKey + b.off, b.q));
   const led = voiceLead(chords);
   se.items = se.slots.map((b, i) => ({
     chord: chords[i],
@@ -613,6 +752,16 @@ function paintRun() {
   }
   q('sgBpmLive').value = setup.bpm;
   q('sgBpmLiveVal').textContent = setup.bpm;
+  // persistent capo context under the big chord — "실제음 B♭ · 카포 3 ·
+  // G 쉐입" — so a capo'd chart never reads as the sounding key
+  const capoHint = q('sgCapoHint');
+  if (session.capo > 0) {
+    capoHint.hidden = false;
+    capoHint.textContent = s('capoRun')(
+      keyLabel(session.soundingKey, session.song.minor),
+      session.capo,
+      keyLabel(session.playedKey, session.song.minor));
+  } else capoHint.hidden = true;
   q('sgRun').classList.toggle('paused', !!session.paused);
   // edit mode survives a re-render (language switch); a rebuild always
   // lands with the slot editor closed
@@ -926,7 +1075,9 @@ function openEditor(slotIdx, at = null) {
   const sl = se.slots[slotIdx];
   if (!sl) return;
   editTarget = { slot: slotIdx, at };
-  editSel = { root: (se.song.key + sl.off) % 12, q: sl.q };
+  // the picker opens on the DISPLAYED chord — playedKey + off, the shape
+  // under the fingers (capo already folded into playedKey)
+  editSel = { root: (se.playedKey + sl.off) % 12, q: sl.q };
   const beat = slotBeatInCell(se, slotIdx) + (at ?? 0);
   q('sgEditAt').textContent = s('slotAt')(se.items[slotIdx].cell + 1, beat + 1);
   rootPicker(q('sgEditRoots'), editSel.root, pc => { editSel.root = pc; },
@@ -951,7 +1102,9 @@ function applyEdit() {
   const { slot, at } = editTarget;
   const orig = se.slots[slot];
   if (!orig) { closeEditor(); return; }
-  const off = (((editSel.root - se.song.key) % 12) + 12) % 12;
+  // offsets stay tonic-relative: the picked root minus the key the
+  // shapes resolve against (playedKey) — capo needs no extra term
+  const off = (((editSel.root - se.playedKey) % 12) + 12) % 12;
   if (at === null) {
     se.slots[slot] = { off, q: editSel.q, beats: orig.beats };
   } else {
@@ -1175,8 +1328,13 @@ function saveChartAs() {
   });
   const song = {
     id: `custom-${Date.now()}`, label, genre: 'custom',
-    key: se.song.key, minor: !!se.song.minor, bars,
+    // the transposed SOUNDING key is the chart's key — offsets stay
+    // tonic-relative, so key+off lands on the heard chord, not the
+    // fingered shape. The capo rides along as metadata: selecting the
+    // saved chart restores it, reproducing the same open shapes.
+    key: se.soundingKey, minor: !!se.song.minor, bars,
   };
+  if (se.capo) song.capo = se.capo;
   // sections index display cells and edits never merge cells — the markers
   // stay valid on the saved chart
   if (Array.isArray(se.song.sections)) song.sections = se.song.sections;
