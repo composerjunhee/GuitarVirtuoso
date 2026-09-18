@@ -1218,15 +1218,21 @@ input:focus-visible, select:focus-visible {
   background: var(--accent-soft);
   box-shadow: 0 0 0 1px var(--accent);        /* accent ring, like .pat-card.sel */
 }
-.chart-syms {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
+/* syms, sustain bars and beat pips share one 4-column beat grid — a
+   half-bar chord literally sits above the pips it starts on */
+.chart-syms, .chart-spans, .chart-beats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 4px;
   min-width: 0;
 }
+.chart-spans i {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.chart-cell.cur .chart-spans i { background: rgba(232, 163, 61, .4); }
 .chart-sym {
-  flex: 1 1 0;
   min-width: 0;
   text-align: center;
   font-family: var(--mono);
@@ -1246,14 +1252,9 @@ input:focus-visible, select:focus-visible {
 /* mic-scoring verdicts, painted at the slot's end */
 .chart-sym.good { color: var(--good); }
 .chart-sym.miss { color: var(--bad); opacity: .85; }
-/* 4 mini pips inside the cell — the current beat fills accent */
-.chart-beats {
-  display: flex;
-  gap: 4px;
-  justify-content: center;
-}
+/* beat lanes — each pip fills its grid column so the chord above it
+   literally covers the pips it sounds over */
 .chart-beats i {
-  width: 13px;
   height: 4px;
   border-radius: 2px;
   background: var(--line);

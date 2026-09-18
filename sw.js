@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v12';  // guitar/metronome volume settings
+const CACHE = 'gv-v13';  // chart cells: beat-aligned chord lanes
 
 const ASSETS = [
   './',

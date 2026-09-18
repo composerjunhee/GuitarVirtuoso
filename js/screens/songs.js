@@ -539,11 +539,19 @@ function buildChart() {
     el.className = 'chart-cell';
     const syms = document.createElement('div');
     syms.className = 'chart-syms';
+    const spans = document.createElement('div');
+    spans.className = 'chart-spans';
+    spans.setAttribute('aria-hidden', 'true');
+    // each slot owns a beat range inside the bar — the symbol and its
+    // sustain bar sit in the same grid columns as the beat pips below,
+    // so "F#7 → beat 3" reads straight down
+    let beatAt = 0;
     cell.slots.forEach(slotIdx => {
       const it = session.items[slotIdx];
       const sp = document.createElement('span');
       sp.className = 'chart-sym' + (cell.slots.length > 1 ? ' half' : '');
       sp.textContent = it.sym;
+      sp.style.gridColumn = `${beatAt + 1} / span ${it.beats}`;
       // symbol tap = audition the voicing + seek to the slot
       sp.addEventListener('click', e => {
         e.stopPropagation();
@@ -551,6 +559,10 @@ function buildChart() {
       });
       it.el = sp;
       syms.append(sp);
+      const hold = document.createElement('i');
+      hold.style.gridColumn = sp.style.gridColumn;
+      spans.append(hold);
+      beatAt += it.beats;
     });
     const beats = document.createElement('div');
     beats.className = 'chart-beats';
@@ -558,7 +570,7 @@ function buildChart() {
     for (let i = 0; i < 4; i++) beats.append(document.createElement('i'));
     // cell background tap = seek to the bar's first slot (no audition)
     el.addEventListener('click', () => seekToItem(cell.slots[0]));
-    el.append(syms, beats);
+    el.append(syms, spans, beats);
     grid.append(el);
     return el;
   });
