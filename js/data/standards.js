@@ -40,6 +40,10 @@ export const STANDARDS = [
       { off: 10, q: 'm7', half: true }, { off: 9, q: '7', half: true },
       { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'C' },
+    ],
   },
   {
     // 16 bars — Cm vamp, ii–V–i, then ii–V–I to Db and back.
@@ -55,6 +59,7 @@ export const STANDARDS = [
       { off: 2, q: 'm7b5' }, { off: 7, q: '7' }, { off: 0, q: 'm7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 8, name: 'B' }],
   },
   {
     // AABA' + tag, 36 bars — modulates Ab → C → Eb → G, bridge through
@@ -75,6 +80,10 @@ export const STANDARDS = [
       { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' },
       { off: 5, q: 'maj7' }, { off: 5, q: 'm7' }, { off: 4, q: 'm7' }, { off: 3, q: 'dim7' },
       { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
     ],
   },
   {
@@ -118,6 +127,10 @@ export const STANDARDS = [
       { off: 0, q: 'maj7' },
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // AABA, 32 bars — the D7 (II7) in bars 3–4 and the Fmaj7 bridge.
@@ -136,6 +149,10 @@ export const STANDARDS = [
       { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' }, { off: 2, q: '7' }, { off: 2, q: '7' },
       { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // 12-bar blues in Bb — quick IV in bar 2, E°7 in bar 6, ii–V in 9–10.
@@ -146,6 +163,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 6, q: 'dim7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'head' }],
   },
   {
     // 12-bar blues in Bb — quick IV in bar 2, ii–V in bars 9–10.
@@ -156,6 +174,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'head' }],
   },
   {
     // 16-bar modal vamp: Fm7 ×4 | Db7 ×4 | Dm7 ×4 | Fm7 ×4.
@@ -165,6 +184,10 @@ export const STANDARDS = [
       { off: 8, q: '7' }, { off: 8, q: '7' }, { off: 8, q: '7' }, { off: 8, q: '7' },
       { off: 9, q: 'm7' }, { off: 9, q: 'm7' }, { off: 9, q: 'm7' }, { off: 9, q: 'm7' },
       { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 4, name: 'B' }, { bar: 8, name: 'C' },
+      { bar: 12, name: 'A' },
     ],
   },
   {
@@ -189,6 +212,10 @@ export const STANDARDS = [
       { off: 0, q: 'm7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 4, name: 'B' }, { bar: 8, name: 'A' },
+      { bar: 12, name: 'C' },
+    ],
   },
   {
     // 32 bars — the cycle-of-fourths workout; "in other words" section
@@ -210,6 +237,10 @@ export const STANDARDS = [
       { off: 0, q: 'm7' }, { off: 5, q: 'm7' }, { off: 10, q: '7' }, { off: 3, q: 'maj7' },
       { off: 8, q: 'maj7' }, { off: 2, q: 'm7b5' }, { off: 7, q: '7' }, { off: 0, q: 'm7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // AABA 32 bars — pure modal: Dm7 ×16, Ebm7 ×8, Dm7 ×8.
@@ -224,6 +255,10 @@ export const STANDARDS = [
       { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
       { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // 12-bar minor blues in Cm — bVI7 (Ab7) to V7 (G7) in bars 9–10.
@@ -234,6 +269,7 @@ export const STANDARDS = [
       { off: 5, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
       { off: 8, q: '7' }, { off: 7, q: '7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
     ],
+    sections: [{ bar: 0, name: 'head' }],
   },
 
   // ---------- more jazz (Real Book changes, extensions flattened) ----------
@@ -258,6 +294,10 @@ export const STANDARDS = [
       { off: 2, q: 'm7' }, { off: 7, q: '7' },
       { off: 0, q: '6', half: true }, { off: 3, q: 'dim7', half: true },
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'B' }, { bar: 16, name: 'A' },
+      { bar: 24, name: 'C' },
     ],
   },
   {
@@ -298,6 +338,10 @@ export const STANDARDS = [
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // 12 bars — cycles Cm → F → Eb → Db and home. Cm(maj7)→Cm7 and
@@ -313,6 +357,7 @@ export const STANDARDS = [
       { off: 1, q: 'maj7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [{ bar: 0, name: 'A' }],
   },
   {
     // ABC, 32 bars — a chain of unresolved ii–Vs. Altered extensions
@@ -336,6 +381,9 @@ export const STANDARDS = [
       // C: | Em7b5 | A7 | Dm7b5 | G7 | Cm7b5 | F7 | Bbmaj7 | % |
       { off: 6, q: 'm7b5' }, { off: 11, q: '7' }, { off: 4, q: 'm7b5' }, { off: 9, q: '7' },
       { off: 2, q: 'm7b5' }, { off: 7, q: '7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 16, name: 'B' }, { bar: 24, name: 'C' },
     ],
   },
   {
@@ -361,6 +409,10 @@ export const STANDARDS = [
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: '6', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'B' }, { bar: 16, name: 'A' },
+      { bar: 24, name: 'C' },
+    ],
   },
   {
     // 10-bar form — often called "in Bb" but the Real Book keys it Dm and
@@ -374,6 +426,7 @@ export const STANDARDS = [
       { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'm6' }, { off: 2, q: '7' },
       { off: 7, q: 'm7' }, { off: 0, q: 'm7' },
     ],
+    sections: [{ bar: 0, name: 'A' }],
   },
   {
     // 32 bars, four 8-bar sections — the bVII7 (Ab7) in bar 3 and the
@@ -403,6 +456,10 @@ export const STANDARDS = [
       { off: 0, q: '6' },
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // 12-bar blues in Bb — famously NO quick IV (Bb7 all four bars) and no
@@ -414,6 +471,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 10, q: '7' }, { off: 10, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'head' }],
   },
 
   // ---------- jazz additions (public lead sheets / Real Book charts) ----------
@@ -467,6 +525,10 @@ export const STANDARDS = [
       { off: 8, q: '7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'm7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 9, name: 'A' }, { bar: 18, name: 'B' },
+      { bar: 26, name: 'A' },
+    ],
   },
   {
     // AAB, 48 bars — Porter's original changes: the opening maj7 a
@@ -492,6 +554,9 @@ export const STANDARDS = [
       { off: 3, q: 'maj7' }, { off: 3, q: 'maj7' }, { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
       { off: 6, q: 'm7b5' }, { off: 5, q: 'm7' }, { off: 4, q: 'm7' }, { off: 3, q: 'dim7' },
       { off: 2, q: 'm7' }, { off: 7, q: '7' }, { off: 0, q: '6' }, { off: 0, q: '6' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 16, name: 'A' }, { bar: 32, name: 'B' },
     ],
   },
   {
@@ -535,6 +600,10 @@ export const STANDARDS = [
       { off: 11, q: 'm7', half: true }, { off: 4, q: '7', half: true },
       { off: 9, q: 'm7', half: true }, { off: 2, q: '7', half: true },
       { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
     ],
   },
   {
@@ -580,6 +649,10 @@ export const STANDARDS = [
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'maj7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
+    ],
   },
   {
     // AABA, 32 bars in Cm — the jam-session minor ii–V–i workout. Bridge
@@ -603,6 +676,10 @@ export const STANDARDS = [
       { off: 0, q: 'm7' },
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 24, name: 'A' },
     ],
   },
   {
@@ -634,6 +711,7 @@ export const STANDARDS = [
       { off: 8, q: 'maj7', half: true }, { off: 1, q: 'maj7', half: true },
       { off: 1, q: '7' }, { off: 0, q: 'm6' },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 16, name: 'A' }],
   },
   {
     // AABA, 64 bars in Bb — the bebop workout. The bridge cycles ii–V–Is
@@ -698,6 +776,10 @@ export const STANDARDS = [
       { off: 2, q: 'm7', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'maj7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 16, name: 'A' }, { bar: 32, name: 'B' },
+      { bar: 48, name: 'A' },
+    ],
   },
 
   {
@@ -718,6 +800,7 @@ export const STANDARDS = [
       { off: 2, q: 'm7b5', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 8, name: 'A' }],
   },
   {
     // 16 bars in Am — the Peggy Lee torch-blues form: i → iv with the
@@ -730,6 +813,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
       { off: 5, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '7' }, { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 8, name: 'A' }],
   },
   {
     // The famous I–vi–ii–V in Eb (the doo-wop changes) — the whole tune
@@ -742,6 +826,7 @@ export const STANDARDS = [
       { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
       { off: 0, q: 'maj7' }, { off: 9, q: 'm7' }, { off: 2, q: 'm7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'A' }],
   },
 
   // ---------- classical ----------
@@ -758,6 +843,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
       { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 8, name: 'A' }],
   },
   {
     // Harmonic skeleton of the main theme (WoO 59, A minor, 3/8 — one
@@ -776,6 +862,9 @@ export const STANDARDS = [
       // A: repeat
       { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
       { off: 0, q: 'm' }, { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'B' }, { bar: 14, name: 'A' },
     ],
   },
   {
@@ -802,6 +891,9 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
       { off: 7, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 7, q: '7' },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+    ],
   },
 
   // ---------- pop ----------
@@ -817,6 +909,7 @@ export const STANDARDS = [
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // I–vi–IV–V loop in A, 16 bars — the whole song is the 4-bar
@@ -829,6 +922,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Verse + "na-na" outro, 16 bars in F. Verse: F–C–C7–F / Bb–F–C–F.
@@ -841,6 +935,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 10, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 10, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'outro' }],
   },
   {
     // I–V–vi–IV loop in C, 16 bars — G/B simplified to G.
@@ -852,6 +947,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // F — the famous 7-bar verse (it "wants" an 8th bar) + the 5-bar
@@ -887,6 +983,10 @@ export const STANDARDS = [
       { off: 2, q: '7', half: true }, { off: 5, q: '', half: true },
       { off: 0, q: '' },
     ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 7, name: 'bridge' },
+      { bar: 17, name: 'verse' },
+    ],
   },
   {
     // A — the verse groove is one chord per bar on the | F#m | D | A | E |
@@ -902,6 +1002,7 @@ export const STANDARDS = [
       { off: 7, q: '' },
       { off: 9, q: 'm', half: true }, { off: 7, q: '', half: true },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 12, name: 'chorus' }],
   },
 
   // ---------- more pop (well-attested charts) ----------
@@ -917,6 +1018,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Em (sounding pitch — the record plays capo-7 C/Am shapes). Verse
@@ -930,6 +1032,7 @@ export const STANDARDS = [
       { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
       { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Am (capo-1 Am shapes; the record sounds Bbm). The whole song rides
@@ -943,6 +1046,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 3, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // G shapes (the record is Ab — capo 1). Verse and chorus both ride
@@ -954,6 +1058,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // D — the verse is | D | D/F# | G | A | (D/F# flattened to D); the
@@ -968,6 +1073,7 @@ export const STANDARDS = [
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 2, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Am shapes (the record is C#m — capo 4). The whole song rides
@@ -979,6 +1085,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 8, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // C shapes (capo 1 — the record is a semitone up). The whole song
@@ -990,6 +1097,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
       { off: 0, q: '' }, { off: 2, q: '' }, { off: 7, q: '' }, { off: 4, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // A — the 3-bar loop A – E/G# – Dsus2 the whole song rides (slash
@@ -1003,6 +1111,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: 'sus2' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // G shapes (the record is B — capo 4). The whole song rides
@@ -1014,6 +1123,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // C shapes (the record is E — capo 4). The I–V–vi–IV loop the whole
@@ -1025,6 +1135,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // F — the whole song rides | F | Dm | Bb | F | (I–vi–IV–I); four
@@ -1036,6 +1147,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Cm — the verse sits on Cm (the Bb passing bass flattened); the
@@ -1050,6 +1162,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 4, name: 'chorus' }],
   },
   {
     // A — the famous chorus loop A–C#m–F#m–D (the record's A–G#–F#
@@ -1061,6 +1174,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'chorus' }],
   },
   {
     // E — I–V–vi–IV; verse and chorus both ride it. Four passes.
@@ -1071,6 +1185,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // D — the whole song rides | D | A | Bm | G |; four passes.
@@ -1081,6 +1196,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // C — verse and chorus ride | C | Em | F | (four passes), then the
@@ -1094,6 +1210,7 @@ export const STANDARDS = [
       // tag: | Am | F | C | C |
       { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 12, name: 'tag' }],
   },
   {
     // G — the vi–V–I–IV loop Em–D–G–C that the verse, refrain and the
@@ -1105,6 +1222,7 @@ export const STANDARDS = [
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Bb — verse | Bb | Gm | Eb | Bb |; the "guess you didn't mean" line
@@ -1124,6 +1242,10 @@ export const STANDARDS = [
       // bridge: | Gm | Eb | Bb |
       { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' },
+      { bar: 13, name: 'bridge' },
+    ],
   },
   {
     // Eb — I–V–vi–IV; the whole song rides | Eb | Bb | Cm | Ab |. Four
@@ -1135,6 +1257,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // A — the famous I–ii–vi–IV loop | A | Bm | F#m | D |; four passes.
@@ -1145,6 +1268,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // C shapes (the record is Db — capo 1). The I–V–vi–IV loop the whole
@@ -1156,6 +1280,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // D — the whole song rides D–F#m with the Bm–A turn; the 8-bar
@@ -1168,6 +1293,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 4, q: 'm' }, { off: 0, q: '' }, { off: 4, q: 'm' },
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
 
   // ---------- k-pop / 가요 ----------
@@ -1201,6 +1327,10 @@ export const STANDARDS = [
       { off: 7, q: '', half: true }, { off: 5, q: '', half: true },
       { off: 0, q: '', half: true }, { off: 2, q: '', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' },
+      { bar: 16, name: 'outro' },
+    ],
   },
   {
     // 봄날 (BTS) — record is Eb; charted in the standard D-shape version
@@ -1232,6 +1362,10 @@ export const STANDARDS = [
       { off: 9, q: 'm', half: true }, { off: 4, q: 'm', half: true },
       { off: 5, q: '', half: true }, { off: 5, q: 'm', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 8, name: 'pre' },
+      { bar: 12, name: 'chorus' },
+    ],
   },
   {
     // 사랑을 했다 (iKON) — in G the record rides Em–C–G–D (vi–IV–I–V).
@@ -1246,6 +1380,7 @@ export const STANDARDS = [
       { off: 5, q: 'maj7' }, { off: 7, q: '' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
       { off: 4, q: 'm7' }, { off: 9, q: 'm' }, { off: 5, q: 'maj7' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
 
   {
@@ -1261,6 +1396,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
       { off: 0, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'refrain' }],
   },
   {
     // 눈의 꽃 (박효신) — the canon-style ballad progression in Bb:
@@ -1273,6 +1409,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
       { off: 5, q: '' }, { off: 0, q: '' }, { off: 2, q: 'm' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // 하루하루 (BIGBANG) — the whole song rides the Em–C–G–D loop
@@ -1285,6 +1422,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // 거짓말 (BIGBANG) — the whole song rides Dm–Bb–F–C (vi–IV–I–V of
@@ -1296,6 +1434,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // 너였다면 (정승환) — the canon-style ballad chart in C:
@@ -1308,6 +1447,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 4, q: 'm' },
       { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // 벚꽃 엔딩 (버스커 버스커) — the spring anthem in E: I–IV–V–I then
@@ -1321,6 +1461,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' },
       { off: 4, q: 'm' }, { off: 9, q: 'm' }, { off: 2, q: 'm' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
 
   // ---------- rock ----------
@@ -1336,6 +1477,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 7, q: '7' }, { off: 10, q: '' }, { off: 5, q: '' },
       { off: 8, q: '' }, { off: 3, q: '' }, { off: 5, q: 'm' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // The Animals' 8-bar verse in Am, played twice.
@@ -1348,6 +1490,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 5, q: '' }, { off: 8, q: '' },
       { off: 0, q: 'm' }, { off: 7, q: '' }, { off: 0, q: 'm' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // The 8-bar loop in G, played twice (Dylan uses Am; Am7 also common).
@@ -1359,6 +1502,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 2, q: 'm' }, { off: 2, q: 'm' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // The 4-bar loop in Em, four passes — verse and chorus both ride it.
@@ -1370,6 +1514,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // The famous loop in the capo-2 Em shapes (the record sounds F#m):
@@ -1382,6 +1527,7 @@ export const STANDARDS = [
       { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
       { off: 0, q: 'm7' }, { off: 3, q: '' }, { off: 10, q: 'sus4' }, { off: 5, q: '7sus4' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // G — the whole song is the 4-bar loop G–B–C–Cm (I–III–IV–iv); the
@@ -1394,6 +1540,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
       { off: 0, q: '' }, { off: 4, q: '' }, { off: 5, q: '' }, { off: 5, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // G — the intro arpeggio figure (Em7–G twice, then Em7–A7sus4 twice
@@ -1410,6 +1557,7 @@ export const STANDARDS = [
       { off: 5, q: '' }, { off: 7, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
       { off: 7, q: '' }, { off: 5, q: '' }, { off: 2, q: 'm' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'intro' }, { bar: 10, name: 'verse' }],
   },
 
   // ---------- more rock (well-attested charts) ----------
@@ -1425,6 +1573,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // G — the picked verse rides | G | G | Cadd9 | D |; the chorus turns
@@ -1439,6 +1588,7 @@ export const STANDARDS = [
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
       { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Em shapes (capo 2 — the record is F#m). The whole song rides
@@ -1450,6 +1600,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Ab — the famous I–vi–IV–V loop; the record's add9 voicings
@@ -1463,6 +1614,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
       { off: 0, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Em — the verse arpeggio loop Em–D–C (twice per phrase) with the
@@ -1477,6 +1629,7 @@ export const STANDARDS = [
       { off: 3, q: '' }, { off: 7, q: '7' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
       { off: 3, q: '' }, { off: 7, q: '7' }, { off: 0, q: 'm' }, { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'refrain' }],
   },
   {
     // Em — the riff's chord skeleton E–G–E–C–B; four passes.
@@ -1493,6 +1646,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 0, q: 'm' },
       { off: 8, q: '', half: true }, { off: 7, q: '', half: true },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Em — the whole song rides the Em–D loop of the riff; eight passes.
@@ -1505,6 +1659,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Am — the verse alternates Am–F; the chorus ("dream of
@@ -1519,6 +1674,7 @@ export const STANDARDS = [
       { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
       { off: 3, q: '' }, { off: 10, q: '' }, { off: 5, q: 'm' }, { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
 
   // ---------- blues ----------
@@ -1532,6 +1688,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // 12-bar in A (originally Bb — A is the common guitar key). Four bars
@@ -1543,6 +1700,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // 12-bar minor blues in Bm — the signature bVImaj7 (Gmaj7) in bar 9
@@ -1555,6 +1713,7 @@ export const STANDARDS = [
       { off: 5, q: 'm7' }, { off: 5, q: 'm7' }, { off: 0, q: 'm7' }, { off: 0, q: 'm7' },
       { off: 8, q: 'maj7' }, { off: 7, q: '7' }, { off: 0, q: 'm7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
 
   {
@@ -1567,6 +1726,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
       { off: 0, q: 'm' }, { off: 10, q: '' }, { off: 8, q: '' }, { off: 7, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Am — the verse rides | Am | Em | G | Am | (the Em/G bass
@@ -1579,6 +1739,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
       { off: 0, q: 'm' }, { off: 7, q: 'm' }, { off: 10, q: '' }, { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // 12-bar shuffle in E (the record is tuned down a half-step; charted
@@ -1590,6 +1751,7 @@ export const STANDARDS = [
       { off: 5, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 0, q: '7' },
       { off: 7, q: '7' }, { off: 5, q: '7' }, { off: 0, q: '7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
 
   // ---------- latin / bossa ----------
@@ -1615,6 +1777,10 @@ export const STANDARDS = [
       // A: final (1st-ending shape)
       { off: 0, q: 'maj7' }, { off: 0, q: 'maj7' }, { off: 2, q: '7' }, { off: 2, q: '7' },
       { off: 2, q: 'm7' }, { off: 1, q: '7' }, { off: 0, q: 'maj7' }, { off: 1, q: '7' },
+    ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 8, name: 'A' }, { bar: 16, name: 'B' },
+      { bar: 32, name: 'A' },
     ],
   },
   {
@@ -1657,6 +1823,10 @@ export const STANDARDS = [
       { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
       { off: 0, q: 'm7', half: true }, { off: 5, q: '7', half: true },
     ],
+    sections: [
+      { bar: 0, name: 'A' }, { bar: 12, name: 'A' }, { bar: 24, name: 'B' },
+      { bar: 32, name: 'A' },
+    ],
   },
   {
     // 16-bar Latin/modal tune in Am — four bars each of Am7 and Cm7
@@ -1676,6 +1846,7 @@ export const STANDARDS = [
       { off: 10, q: 'm7', half: true }, { off: 3, q: '7', half: true },
       { off: 8, q: 'maj7' }, { off: 7, q: '7' },
     ],
+    sections: [{ bar: 0, name: 'A' }, { bar: 8, name: 'B' }],
   },
 
   // ---------- folk ----------
@@ -1697,6 +1868,10 @@ export const STANDARDS = [
       { off: 0, q: '', half: true }, { off: 7, q: '', half: true },
       { off: 0, q: '' },
     ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 8, name: 'pre' },
+      { bar: 16, name: 'chorus' },
+    ],
   },
   {
     // Strophic folk in C — three question pairs then the answer. Folk
@@ -1716,6 +1891,7 @@ export const STANDARDS = [
       { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 9, q: 'm' },
       { off: 5, q: '' }, { off: 7, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 24, name: 'refrain' }],
   },
   {
     // The chorus loop in G, played twice — "country roads, take me home".
@@ -1727,6 +1903,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'chorus' }],
   },
   {
     // English folk in Am (in 6/8 — charted one or two chords per bar as on
@@ -1750,6 +1927,7 @@ export const STANDARDS = [
       { off: 0, q: 'm', half: true }, { off: 7, q: '7', half: true },
       { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'refrain' }],
   },
   {
     // 아리랑 — Korean folk song in a simple Western harmonization in C
@@ -1764,6 +1942,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 9, q: 'm7' }, { off: 5, q: 'maj7' }, { off: 0, q: '' },
       { off: 7, q: '' }, { off: 9, q: 'm' }, { off: 7, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
 
   // ---------- more folk / country ----------
@@ -1780,6 +1959,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '' }, { off: 5, q: '' }, { off: 5, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // Am — the whole song rides i–III–VII–i: | Am | C | G | Am |.
@@ -1790,6 +1970,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
       { off: 0, q: 'm' }, { off: 3, q: '' }, { off: 10, q: '' }, { off: 0, q: 'm' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // G — the mariachi-horn chart: I–IV pairs with the V7 turnaround.
@@ -1802,6 +1983,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 5, q: '' },
       { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Am (Johnny Cash version) — the verse walks Am–C–D; the chorus
@@ -1815,6 +1997,7 @@ export const STANDARDS = [
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
       { off: 0, q: 'm' }, { off: 8, q: '' }, { off: 3, q: '' }, { off: 10, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }, { bar: 8, name: 'chorus' }],
   },
   {
     // C — the verse form | C | F | C | C | F | C | G7 | C |, twice.
@@ -1825,6 +2008,7 @@ export const STANDARDS = [
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 0, q: '' }, { off: 0, q: '' },
       { off: 5, q: '' }, { off: 0, q: '' }, { off: 7, q: '7' }, { off: 0, q: '' },
     ],
+    sections: [{ bar: 0, name: 'verse' }],
   },
   {
     // Once (2007) — Glen Hansard & Markéta Irglová. Common guitar key C
@@ -1851,6 +2035,12 @@ export const STANDARDS = [
       // Outro ("sing your melody, I'll sing along"): | C | F | Am | F | C |
       { off: 0, q: '' }, { off: 5, q: '' }, { off: 9, q: 'm' }, { off: 5, q: '' },
       { off: 0, q: '' },
+    ],
+    sections: [
+      { bar: 0, name: 'verse' }, { bar: 8, name: 'bridge' },
+      { bar: 16, name: 'chorus' }, { bar: 24, name: 'interlude' },
+      { bar: 28, name: 'bridge' }, { bar: 36, name: 'chorus' },
+      { bar: 44, name: 'outro' },
     ],
   },
 ];

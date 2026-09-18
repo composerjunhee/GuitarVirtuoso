@@ -1323,6 +1323,33 @@ input:focus-visible, select:focus-visible {
 .chart-cell, .chart-sym { cursor: pointer; user-select: none; }
 .chart-sym:hover { background: rgba(232, 163, 61, .12); }
 
+/* section marker: a full-width label row inserted into the chart grid
+   before the cell where a song section starts (song.sections → buildChart
+   in js/screens/songs.js). Quiet .row-label-ish type with a trailing
+   hairline; the tap seeks to the section's first slot. */
+.chart-sec {
+  grid-column: 1 / -1;           /* spans the 4-col / 2-col chart grid */
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 4px 1px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+}
+.chart-sec:first-child { padding-top: 1px; }
+.chart-sec::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--line);
+}
+.chart-sec:hover { color: var(--accent); }
+
 /* ============ fretboard game (#fretBody, js/screens/fretboardGame.js) ============
    The run card is wider than the 560px .setup-card so the 15-fret SVG keeps
    big tappable cells; on phones the .board rules already scroll it. */

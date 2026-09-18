@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v17';  // count-in: 4 beats for prog drill, 2 for the rest
+const CACHE = 'gv-v18';  // song chart section markers (verse/chorus/A-B)
 
 const ASSETS = [
   './',

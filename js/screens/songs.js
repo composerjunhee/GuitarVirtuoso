@@ -107,6 +107,22 @@ const STR = {
   },
 };
 
+// chart section markers (song.sections) — localized names for the
+// structural keys; jazz form letters (A–D) render as-is, untranslated
+const SEC = {
+  ko: {
+    intro: '인트로', verse: '벌스', pre: '프리코러스', chorus: '코러스',
+    bridge: '브릿지', interlude: '간주', solo: '솔로', outro: '아웃트로',
+    tag: '태그', refrain: '리프레인', head: '헤드', vamp: '뱀프',
+  },
+  en: {
+    intro: 'Intro', verse: 'Verse', pre: 'Pre', chorus: 'Chorus',
+    bridge: 'Bridge', interlude: 'Interlude', solo: 'Solo',
+    outro: 'Outro', tag: 'Tag', refrain: 'Refrain', head: 'Head',
+    vamp: 'Vamp',
+  },
+};
+
 const setup = { song: STANDARDS[0].id, bpm: 120, mic: false, loops: 2 };
 
 const LS_SONGS = 'gt.songs';     // saved custom charts (progBuilder pattern)
@@ -126,6 +142,9 @@ let pollTimer = null;
 let voteRing = [];               // sliding window of recent match results
 
 const s = k => STR[getLang()]?.[k] ?? STR.en[k] ?? k;
+// a section name from standards.js → display label; unknown keys (and the
+// A–D jazz letters, which have no SEC entry) render as the raw name
+const secName = name => SEC[getLang()]?.[name] ?? SEC.en[name] ?? name;
 const q = id => body.querySelector('#' + id);
 
 // defer a visual to an audio-clock time, tracked for cleanup (same pattern
@@ -616,7 +635,28 @@ function buildChart() {
   grid.classList.toggle('chart-editing', !!session.editing);
   lastPip = null;                // old pip/lane nodes are discarded anyway
   lastLane = null;
-  cellEls = session.cells.map(cell => {
+  // section markers: a full-width .chart-sec row ahead of the cell where a
+  // section starts. song.sections indexes display cells (stock charts:
+  // cell == bar; edits never merge cells, so markers stay valid); a marker
+  // at ≥ cells.length is dropped — an edited chart can shrink the grid.
+  const secAt = new Map();
+  for (const sec of session.song.sections || []) {
+    if (Number.isInteger(sec.bar) && sec.bar >= 0 &&
+        sec.bar < session.cells.length && !secAt.has(sec.bar)) {
+      secAt.set(sec.bar, sec.name);
+    }
+  }
+  cellEls = session.cells.map((cell, ci) => {
+    if (secAt.has(ci)) {
+      const mark = document.createElement('div');
+      mark.className = 'chart-sec';
+      mark.textContent = secName(secAt.get(ci));
+      // marker tap = seek to the section's first slot (like a cell tap)
+      mark.addEventListener('click', () => {
+        if (!session.editing) seekToItem(cell.slots[0]);
+      });
+      grid.append(mark);
+    }
     const el = document.createElement('div');
     el.className = 'chart-cell';
     // beat lanes come first: the same 4-column grid as the content rows
@@ -1098,6 +1138,9 @@ export function getCustomSongs() {
       p && typeof p.id === 'string' && typeof p.label === 'string' &&
       Number.isInteger(p.key) && p.key >= 0 && p.key < 12 &&
       Array.isArray(p.bars) && p.bars.length > 0 &&
+      (!p.sections || (Array.isArray(p.sections) && p.sections.every(x =>
+        x && Number.isInteger(x.bar) && x.bar >= 0 &&
+        typeof x.name === 'string'))) &&
       p.bars.every(b =>
         b && Number.isInteger(b.off) && b.off >= 0 && b.off < 12 &&
         typeof b.q === 'string' &&
@@ -1134,6 +1177,9 @@ function saveChartAs() {
     id: `custom-${Date.now()}`, label, genre: 'custom',
     key: se.song.key, minor: !!se.song.minor, bars,
   };
+  // sections index display cells and edits never merge cells — the markers
+  // stay valid on the saved chart
+  if (Array.isArray(se.song.sections)) song.sections = se.song.sections;
   const list = getCustomSongs();
   list.push(song);
   try { localStorage.setItem(LS_SONGS, JSON.stringify(list)); }

@@ -747,6 +747,25 @@ export async function runAll(report = console.log) {
       tt.bars[1].off === 2 && tt.bars.some(b => b.off === 0 && b.q === 'm'),
       'Through the Night: G/A opening + Gm switch');
   }
+  { // section markers: `bar` indexes display cells (stock charts: cell ==
+    // bar — verified by the barCells contract above), `name` comes from
+    // the fixed key set songs.js localizes (letters A–D stay as-is), and
+    // the list is strictly ascending so buildChart streams markers in
+    // order. Stock songs all carry a map; saved 'custom' charts may not.
+    const SEC_NAMES = new Set(['intro', 'verse', 'pre', 'chorus', 'bridge',
+      'interlude', 'solo', 'outro', 'tag', 'refrain', 'head', 'vamp',
+      'A', 'B', 'C', 'D']);
+    for (const sd of STANDARDS) {
+      const n = songs.barCells(sd).length;
+      const secs = sd.sections || [];
+      const inRange = secs.every(x => Number.isInteger(x.bar) &&
+        x.bar >= 0 && x.bar < n && SEC_NAMES.has(x.name));
+      const sorted = secs.every((x, i) => !i || x.bar > secs[i - 1].bar);
+      ok(inRange && sorted && (sd.genre === 'custom' || secs.length > 0),
+        `${sd.id}: sections sorted, in-range, known names`,
+        secs.map(x => `${x.name}@${x.bar}`).join(' '));
+    }
+  }
 
   report(`\n${pass} passed, ${fail} failed` +
     (known ? `, ${known} known-limitation${known === 1 ? '' : 's'}` : ''));
