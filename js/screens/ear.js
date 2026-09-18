@@ -175,7 +175,9 @@ const DEFAULT_INT_POOL = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12];  // TT off by def
 // Progression drill pool: preset ids from data/progressions.js (same ids
 // the practice/strum pickers use). Standards excluded — too long to quiz.
 const DEFAULT_PROG_POOL = ['I-V-vi-IV', 'vi-IV-I-V', 'I-vi-IV-V', 'ii-V-I'];
-const PROG_GAP_MS = 900;
+// progression drill pacing — 900ms onsets felt rushed right after the
+// count-in, so chords get a full 1.8s each and ring ~2.2s into the gap
+const PROG_GAP_MS = 1800;
 
 const HINTS = {
   quality: 'hintQuality', interval: 'hintInterval', root: 'hintRoot',
@@ -547,7 +549,7 @@ function flashCountin(n) {
 // suspendEar to chase — a cut-off sequence just rings out its last chord.
 function playSequence(voicings, gapMs = PROG_GAP_MS) {
   voicings.forEach((v, i) => {
-    if (v) playVoicing(v, { at: i * gapMs / 1000, dur: 1.4 });
+    if (v) playVoicing(v, { at: i * gapMs / 1000, dur: 2.2 });
   });
 }
 
