@@ -767,6 +767,42 @@ export async function runAll(report = console.log) {
     }
   }
 
+  // -- strum patterns: preset grid contract + custom-pattern validation --
+  // (pure data checks — the session only ever reads beats/slots)
+  report('strum patterns');
+  const strum = await import('../js/screens/strum.js');
+  { // every preset lives on the 8th-note grid: 2 slots per metronome beat
+    ok(strum.PATTERNS.every(p => p.beats === 3 || p.beats === 4),
+      'every preset: beats ∈ {3,4}');
+    ok(strum.PATTERNS.every(p => p.slots.length === p.beats * 2),
+      'every preset: slots.length === beats*2');
+    ok(strum.PATTERNS.every(p => /^[DU.]+$/.test(p.slots)),
+      'every preset: slot chars ∈ {D,U,.}');
+    ok(new Set(strum.PATTERNS.map(p => p.id)).size === strum.PATTERNS.length,
+      'preset ids unique');
+    ok(strum.PATTERNS.every(p => p.name && p.name.ko && p.name.en),
+      'preset names bilingual (ko+en)');
+    ok(strum.PATTERNS.length >= 12,
+      `≥12 presets after the pattern pack (got ${strum.PATTERNS.length})`);
+  }
+  { // the gt.patterns validator: accepts a well-formed entry, rejects each
+    // broken field individually (bad loads are dropped, not repaired)
+    const good = { id: 'pat-1', beats: 4, slots: 'D.U.D.U.',
+      name: { ko: 'x', en: 'x' } };
+    ok(strum.validPattern(good), 'validator accepts well-formed pattern');
+    ok(strum.validPattern({ ...good, beats: 3, slots: 'D.U.U.' }),
+      'validator accepts 3/4 pattern');
+    ok(!strum.validPattern({ ...good, beats: 6 }), 'validator rejects beats=6');
+    ok(!strum.validPattern({ ...good, slots: 'D.U' }),
+      'validator rejects short slots');
+    ok(!strum.validPattern({ ...good, slots: 'D.U.D.UX' }),
+      'validator rejects bad slot char');
+    ok(!strum.validPattern({ ...good, name: 'x' }),
+      'validator rejects non-bilingual name');
+    ok(!strum.validPattern(null) && !strum.validPattern('DUDU'),
+      'validator rejects non-objects');
+  }
+
   report(`\n${pass} passed, ${fail} failed` +
     (known ? `, ${known} known-limitation${known === 1 ? '' : 's'}` : ''));
   return { pass, fail };

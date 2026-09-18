@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v18';  // song chart section markers (verse/chorus/A-B)
+const CACHE = 'gv-v19';  // strum: +6 presets, custom pattern editor
 
 const ASSETS = [
   './',

@@ -57,6 +57,15 @@ const STR = {
     standards: '재즈 스탠다드',
     search: '곡/진행 검색…',
     noMatch: '결과 없음',
+    newPat: '+ 새 패턴',
+    customBadge: '커스텀',
+    meter: '박자',
+    patNamePh: '패턴 이름',
+    myPattern: '내 패턴',
+    save: '저장',
+    cancel: '취소',
+    del: '삭제',
+    patSaved: '패턴 저장됨',
   },
   en: {
     pattern: 'Pattern',
@@ -88,18 +97,35 @@ const STR = {
     standards: 'Jazz standards',
     search: 'Search songs…',
     noMatch: 'No matches',
+    newPat: '+ New',
+    customBadge: 'Custom',
+    meter: 'Meter',
+    patNamePh: 'Pattern name',
+    myPattern: 'My pattern',
+    save: 'Save',
+    cancel: 'Cancel',
+    del: 'Delete',
+    patSaved: 'Pattern saved',
   },
 };
 
 // A bar = 8th-note slots, each 'D' | 'U' | '.' (rest). `beats` is the
-// metronome's beats-per-bar, so slots.length === beats * 2.
-const PATTERNS = [
-  { id: 'folk',   beats: 4, slots: 'D.DU.UDU', name: { ko: '포크',      en: 'Folk' } },
-  { id: 'ballad', beats: 4, slots: 'D...DU.U', name: { ko: '발라드',    en: 'Ballad' } },
-  { id: 'drive',  beats: 4, slots: 'DUDUDUDU', name: { ko: '드라이브',  en: 'Driving 8ths' } },
-  { id: 'off',    beats: 4, slots: '.U.U.U.U', name: { ko: '오프비트',  en: 'Offbeats' } },
-  { id: 'rumba',  beats: 4, slots: 'D.U.UD.U', name: { ko: '룸바',      en: 'Rumba' } },
-  { id: 'waltz',  beats: 3, slots: 'D.U.U.',   name: { ko: '왈츠 3/4',  en: 'Waltz 3/4' } },
+// metronome's beats-per-bar, so slots.length === beats * 2. Ordered
+// roughly by density — sparse/laid-back cards first, full-8th drivers last.
+// Exported for the selftest's grid-contract assertions.
+export const PATTERNS = [
+  { id: 'ballad',   beats: 4, slots: 'D...DU.U', name: { ko: '발라드',      en: 'Ballad' } },
+  { id: 'campfire', beats: 4, slots: 'D..U.U.U', name: { ko: '캠프파이어',  en: 'Campfire' } },
+  { id: 'waltz',    beats: 3, slots: 'D.U.U.',   name: { ko: '왈츠 3/4',    en: 'Waltz 3/4' } },
+  { id: 'folk',     beats: 4, slots: 'D.DU.UDU', name: { ko: '포크',        en: 'Folk' } },
+  { id: 'country',  beats: 4, slots: 'D.U.DU.U', name: { ko: '컨트리',      en: 'Country' } },
+  { id: 'poprock',  beats: 4, slots: 'D.UD.DU.', name: { ko: '팝록',        en: 'Pop/Rock' } },
+  { id: 'push',     beats: 4, slots: 'D..DU.U.', name: { ko: '싱코페이션',  en: 'Syncopated Push' } },
+  { id: 'rumba',    beats: 4, slots: 'D.U.UD.U', name: { ko: '룸바',        en: 'Rumba' } },
+  { id: 'soul',     beats: 4, slots: 'D.D.U.UD', name: { ko: '소울',        en: 'Soul' } },
+  { id: 'off',      beats: 4, slots: '.U.U.U.U', name: { ko: '오프비트',    en: 'Offbeats' } },
+  { id: 'gallop',   beats: 4, slots: 'DU.UDU.U', name: { ko: '갤럽',        en: 'Gallop' } },
+  { id: 'drive',    beats: 4, slots: 'DUDUDUDU', name: { ko: '드라이브',    en: 'Driving 8ths' } },
 ];
 
 const COMMON_Q = ['', 'm', '7', 'maj7', 'm7', 'm7b5', 'sus2', 'sus4'];
@@ -121,14 +147,68 @@ let timers = new Set();          // pending visual-sync timeouts
 let pollTimer = null;
 let voteRing = [];               // sliding window of recent match results
 
+const LS_PATS = 'gt.patterns';       // saved custom patterns (progBuilder pattern)
+
 const s = k => STR[getLang()]?.[k] ?? STR.en[k] ?? k;
 const q = id => body.querySelector('#' + id);
+
+let patDraft = null;                 // editor draft {beats, slots, name} or null
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
 
 // defer a visual to an audio-clock time, tracked for cleanup
 function later(fn, ms) {
   const id = setTimeout(() => { timers.delete(id); fn(); }, ms);
   timers.add(id);
 }
+
+// ---------- custom patterns (gt.patterns) ----------
+
+// Same one-store-per-feature pattern as progBuilder (gt.progs) and songs
+// (gt.songs): entries keep the PATTERNS shape so the session only ever
+// reads pattern.beats/pattern.slots — no other plumbing needed. `name` is
+// the user's own label, stored under both langs like a chart's `label`.
+//   [{ id:'pat-<ts>', beats:3|4, slots:'D/U/.', name:{ko,en} }]
+// Exported for the selftest's validator assertions.
+export function validPattern(p) {
+  return !!p && typeof p.id === 'string' &&
+    (p.beats === 3 || p.beats === 4) &&
+    typeof p.slots === 'string' && /^[DU.]+$/.test(p.slots) &&
+    p.slots.length === p.beats * 2 &&
+    !!p.name && typeof p.name.ko === 'string' && typeof p.name.en === 'string';
+}
+
+export function getCustomPatterns() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_PATS));
+    if (!Array.isArray(raw)) return [];
+    const seen = new Set();           // dedupe by id, like registerCustomSongs
+    return raw.filter(p => {
+      if (!validPattern(p) || seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    });
+  } catch {
+    return [];
+  }
+}
+
+function savePatterns(list) {
+  try {
+    localStorage.setItem(LS_PATS, JSON.stringify(list));
+    return true;
+  } catch {
+    return false;                     // storage full/blocked — stay put
+  }
+}
+
+// presets first, then the user's own cards
+function allPatterns() { return [...PATTERNS, ...getCustomPatterns()]; }
 
 // ---------- DOM ----------
 
@@ -137,8 +217,11 @@ function render() {
     <div id="stSetup" class="setup-card">
       <div class="chip-row"><span class="row-label" data-s="mode"></span>
         <span id="stMode" class="seg"></span></div>
-      <div id="stPatRow"><span class="picker-label" data-s="pattern"></span>
-        <div id="stPat" class="pat-grid"></div></div>
+      <div id="stPatRow">
+        <div class="pat-head"><span class="picker-label" data-s="pattern"></span>
+          <button id="stPatNew" class="chip pat-new" data-s="newPat"></button></div>
+        <div id="stPat" class="pat-grid"></div>
+        <div id="stPatEditor" class="pat-editor" hidden></div></div>
       <div id="stOneOpts">
         <div class="chip-row"><span class="row-label" data-s="root"></span>
           <span id="stRoot" class="chip-row"></span></div>
@@ -230,6 +313,11 @@ function wire() {
   // wired here (once per render()) — renderSetupRows re-runs on the same
   // element and would stack listeners.
   q('stProgSearch').addEventListener('input', e => fillProgSelect(e.target.value));
+  // pattern editor toggle — opens a fresh draft; a second tap closes it
+  q('stPatNew').addEventListener('click', () => {
+    if (patDraft) closePatEditor();
+    else openPatEditor();
+  });
   q('stProg').addEventListener('change', () => {
     const p = [...PROGRESSIONS, ...STANDARDS]
       .find(x => x.id === q('stProg').value);
@@ -275,12 +363,22 @@ function renderSetupRows() {
   q('stProgOpts').hidden = !progMode;
 
   // self-previewing radio-cards: pattern name + a miniature glyph strip of
-  // its slot string (D/U/· in compact .strum-slot form)
+  // its slot string (D/U/· in compact .strum-slot form). Custom patterns
+  // (gt.patterns) ride the same grid — dashed border, a 커스텀/Custom badge
+  // and a corner ✕ that arms on first tap and deletes on the second
+  // (stats.js two-tap convention). The ✕ sits in a .pat-cell wrapper, not
+  // inside the card — nested buttons are invalid markup.
   const patEl = q('stPat');
   patEl.replaceChildren();
-  for (const p of PATTERNS) {
+  const pats = allPatterns();
+  // a deleted/invalid selection falls back to the first preset
+  if (!pats.some(p => p.id === setup.pattern)) setup.pattern = PATTERNS[0].id;
+  const presetIds = new Set(PATTERNS.map(p => p.id));
+  for (const p of pats) {
+    const custom = !presetIds.has(p.id);
     const card = document.createElement('button');
-    card.className = 'pat-card' + (p.id === setup.pattern ? ' sel' : '');
+    card.className = 'pat-card' + (custom ? ' custom' : '') +
+      (p.id === setup.pattern ? ' sel' : '');
     card.dataset.id = p.id;
     const name = document.createElement('span');
     name.className = 'pat-name';
@@ -295,14 +393,23 @@ function renderSetupRows() {
       slot.textContent = ch === '.' ? '·' : ch;
       strip.append(slot);
     }
-    card.append(name, strip);
+    if (custom) card.append(name, el('span', 'pat-badge', s('customBadge')), strip);
+    else card.append(name, strip);
     card.addEventListener('click', () => {
       patEl.querySelectorAll('.pat-card').forEach(c => c.classList.remove('sel'));
       card.classList.add('sel');
       setup.pattern = p.id;
     });
-    patEl.append(card);
+    if (custom) {
+      const cell = el('div', 'pat-cell');
+      cell.append(card, patDelButton(p.id));
+      patEl.append(cell);
+    } else {
+      patEl.append(card);
+    }
   }
+  // the editor re-opens over the rebuilt rows (e.g. language switch mid-edit)
+  if (patDraft) paintPatEditor();
 
   // chips localize note names like the other screens; the big chord title
   // stays a Latin chord symbol (chordSymbol is called without `lang`)
@@ -326,6 +433,120 @@ function renderSetupRows() {
     { id: 'off', label: s('micOff') },
     { id: 'on', label: s('micOn') },
   ], setup.micCheck ? 'on' : 'off', id => { setup.micCheck = id === 'on'; });
+}
+
+// ✕ arms on the first tap, deletes on the second — the stats.js two-tap
+// convention. Deleting the selected pattern falls back to the first preset.
+function patDelButton(id) {
+  const rm = el('button', 'pat-del', '✕');
+  rm.title = s('del');
+  let armed = false, t = null;
+  rm.addEventListener('click', e => {
+    e.stopPropagation();             // never toggle the card under it
+    if (!armed) {
+      armed = true;
+      rm.classList.add('armed');
+      t = setTimeout(() => {
+        armed = false; rm.classList.remove('armed');
+      }, 1600);
+      return;
+    }
+    clearTimeout(t);
+    savePatterns(getCustomPatterns().filter(p => p.id !== id));
+    if (setup.pattern === id) setup.pattern = PATTERNS[0].id;
+    renderSetupRows();
+  });
+  return rm;
+}
+
+// ---------- pattern editor ----------
+
+// Inline D/U/rest editor inside the pattern row: a 4/4|3/4 meter seg, a
+// tap-to-cycle slot strip (D → U → · → D), a name field, save/cancel.
+// Saves to gt.patterns; the new card is selected immediately.
+const CYCLE = { 'D': 'U', 'U': '.', '.': 'D' };
+
+function openPatEditor() {
+  patDraft = { beats: 4, slots: 'D.......', name: '' };
+  paintPatEditor();
+}
+
+function closePatEditor() {
+  patDraft = null;
+  const ed = q('stPatEditor');
+  if (ed) { ed.hidden = true; ed.replaceChildren(); }
+}
+
+function paintPatEditor() {
+  const ed = q('stPatEditor');
+  if (!ed || !patDraft) return;
+  ed.replaceChildren();
+  ed.hidden = false;
+
+  const meterRow = el('div', 'chip-row');
+  meterRow.append(el('span', 'row-label', s('meter')));
+  const seg = el('span');
+  meterRow.append(seg);
+  segRow(seg, [
+    { id: '4', label: '4/4' },
+    { id: '3', label: '3/4' },
+  ], String(patDraft.beats), id => {
+    patDraft.beats = +id;
+    // resize the strip to the new meter: keep what fits, pad with rests
+    const n = patDraft.beats * 2;
+    patDraft.slots = (patDraft.slots + '........').slice(0, n);
+    paintPatEditor();
+  });
+  ed.append(meterRow);
+
+  const strip = el('div', 'pat-edit-strip');
+  [...patDraft.slots].forEach((ch, i) => {
+    const b = el('button', 'strum-slot pat-edit-slot');
+    b.dataset.ch = ch;
+    b.textContent = ch === '.' ? '·' : ch;
+    b.addEventListener('click', () => {
+      patDraft.slots =
+        patDraft.slots.slice(0, i) + CYCLE[ch] + patDraft.slots.slice(i + 1);
+      paintPatEditor();
+    });
+    strip.append(b);
+  });
+  ed.append(strip);
+
+  // the draft mirrors the input so a slot-tap repaint can't lose typed text
+  const nameIn = el('input', 'gt-input');
+  nameIn.type = 'text';
+  nameIn.placeholder = s('patNamePh');
+  nameIn.maxLength = 40;
+  nameIn.value = patDraft.name;
+  nameIn.addEventListener('input', () => { patDraft.name = nameIn.value; });
+  ed.append(nameIn);
+
+  const foot = el('div', 'chip-row wrap pat-edit-foot');
+  const save = el('button', 'primary', s('save'));
+  save.addEventListener('click', savePatDraft);
+  const cancel = el('button', 'ghost', s('cancel'));
+  cancel.addEventListener('click', closePatEditor);
+  foot.append(save, cancel);
+  ed.append(foot);
+}
+
+function savePatDraft() {
+  if (!patDraft) return;
+  const name = patDraft.name.trim() || s('myPattern');
+  const p = {
+    id: `pat-${Date.now()}`,
+    beats: patDraft.beats,
+    slots: patDraft.slots,
+    name: { ko: name, en: name },     // the user's own label, both langs
+  };
+  const list = getCustomPatterns();
+  list.push(p);
+  if (!savePatterns(list)) return;    // storage blocked — keep the editor open
+  setup.pattern = p.id;
+  closePatEditor();
+  renderSetupRows();
+  showBanner(s('patSaved'), 2500);
 }
 
 // ---------- song search ----------
@@ -390,7 +611,9 @@ async function startSession() {
         mic.stop(); return;
       }
     }
-    const pattern = PATTERNS.find(p => p.id === setup.pattern) || PATTERNS[0];
+    // custom patterns are lookup-identical to presets — the session only
+    // reads pattern.beats/pattern.slots
+    const pattern = allPatterns().find(p => p.id === setup.pattern) || PATTERNS[0];
     // 'one' = a single-chord session (items.length 1 keeps the item index
     // at 0); 'prog' resolves the preset's bars against the chosen key, the
     // same way practice.js does (root = key + off, mod 12 inside makeChord).
