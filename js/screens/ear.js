@@ -203,10 +203,12 @@ let advanceTimer = null;
 let countTimer = null;             // fires the round's sound after count-in
 let countTimers = new Set();       // count-in overlay flash timeouts
 
-// 4 metronome clicks before each round's sound — a chord that lands on a
-// beat is far easier to place than one that arrives by surprise. 84 bpm
-// is brisk enough to keep rounds moving, slow enough to settle on.
-const COUNT_BPM = 84, COUNT_BEATS = 4;
+// Count-in clicks before each round's sound — a chord that lands on a
+// beat is far easier to place than one that arrives by surprise. The
+// progression drill plays a sequence like a song, so it keeps a full
+// 4-beat bar; single-chord/note drills get a brisker 2 beats. 84 bpm.
+const COUNT_BPM = 84;
+const countBeats = ty => ty === 'prog' ? 4 : 2;
 let voteRing = [];               // sliding window of recent match results
 let seenOnset = 0;               // last onset timestamp the vote consumed
 
@@ -513,17 +515,18 @@ function pickProg() {
 function playCountIn(then) {
   const ctx = audioCtx();
   const spb = 60 / COUNT_BPM;
+  const beats = countBeats(session?.type);
   const t0 = ctx.currentTime + 0.06;
-  for (let i = 0; i < COUNT_BEATS; i++) clickAt(t0 + i * spb, i === 0);
+  for (let i = 0; i < beats; i++) clickAt(t0 + i * spb, i === 0);
   const later = (fn, ms) => {
     const id = setTimeout(() => { countTimers.delete(id); fn(); }, ms);
     countTimers.add(id);
   };
-  for (let i = 0; i < COUNT_BEATS; i++) {
-    const n = COUNT_BEATS - i;
+  for (let i = 0; i < beats; i++) {
+    const n = beats - i;
     later(() => flashCountin(n), (t0 - ctx.currentTime + i * spb) * 1000);
   }
-  const end = (t0 - ctx.currentTime + COUNT_BEATS * spb) * 1000;
+  const end = (t0 - ctx.currentTime + beats * spb) * 1000;
   later(() => flashCountin(0), end);
   countTimer = setTimeout(() => {
     countTimer = null;
