@@ -16,6 +16,7 @@ import { parseSymbol, chordSymbol, chordPcs, QUALITIES, makeChord } from '../js/
 import { STRINGS, midiToFreq, freqToMidi, midiToPc } from '../js/theory/notes.js';
 import { STANDARDS, GENRES } from '../js/data/standards.js';
 import { PROGRESSIONS } from '../js/data/progressions.js';
+import { CURATED } from '../js/data/curated.js';
 
 const SR = 44100;
 
@@ -431,6 +432,56 @@ export async function runAll(report = console.log) {
   ok(empty === 0 && bad.length === 0,
     `${total} chords all voiced (${Date.now() - t0}ms)`,
     empty || bad.length ? `empty=${empty} ${bad.slice(0, 6).join('; ')}` : '');
+
+  // -- curated table integrity: every hand-entered / template-instantiated
+  //    shape must sound ONLY its chord's pcs (no foreign tones — analyze()
+  //    drops those) and cover every required pc (the 5th may be omitted in
+  //    4+-note chords). A shape failing either never reaches the fretboard. --
+  {
+    const badCur = [];
+    for (const [key, shapes] of Object.entries(CURATED)) {
+      const [rs, q] = key.split('|');
+      const need = chordPcs(+rs, q);
+      const fifth = (+rs + 7) % 12;
+      for (const s of shapes) {
+        const got = voicingPcs(s);
+        const missing = [...need].filter(pc => !got.has(pc));
+        const foreign = [...got].filter(pc => !need.has(pc));
+        if (!missing.every(pc => pcs5ok(pc, need, fifth)) || foreign.length) {
+          badCur.push(`${key} [${s.frets}] miss=${missing} extra=${foreign}`);
+        }
+      }
+    }
+    ok(badCur.length === 0, 'every curated shape sounds exactly its chord',
+      badCur.slice(0, 6).join('; '));
+  }
+
+  // -- canonical-first: the researched movable shapes must outrank the
+  //    generic barres for these chords (all curated carry score 1000, so
+  //    list order decides). The Cmaj9 x-3-2-4-3-x grip is the headline fix. --
+  {
+    const first = (r, q) => voicingsFor(makeChord(r, q))[0].frets.join(',');
+    ok(first(0, 'maj9') === '-1,3,2,4,3,-1', 'Cmaj9 → x-3-2-4-3-x first',
+      first(0, 'maj9'));
+    ok(first(0, 'm9') === '-1,3,1,3,3,-1', 'Cm9 → x-3-1-3-3-x first',
+      first(0, 'm9'));
+    ok(first(0, '9') === '-1,3,2,3,3,-1', 'C9 → x-3-2-3-3-x first',
+      first(0, '9'));
+    ok(first(0, '11') === '-1,3,3,3,3,3', 'C11 → x-3-3-3-3-3 first',
+      first(0, '11'));
+    ok(first(7, '13') === '-1,10,9,10,10,12', 'G13 → x-10-9-10-10-12 first',
+      first(7, '13'));
+    ok(first(9, 'm9') === '-1,0,2,4,1,3', 'Am9 → open x-0-2-4-1-3 first',
+      first(9, 'm9'));
+    // a negative-offset template skips roots that would fall off the neck:
+    // Bbm9's A-shape would need fret -1 on the D string, so the E-shape wins
+    ok(first(10, 'm9') === '6,8,6,6,6,8',
+      'Bbm9 → A-shape skipped (fret -1), E-shape wins', first(10, 'm9'));
+    // D-string-rooted templates exist too (G = x-x-5-7-8-7)
+    ok(voicingsFor(makeChord(7, ''))
+      .some(v => v.frets.join(',') === '-1,-1,5,7,8,7'),
+      'G → D-shape x-x-5-7-8-7 offered');
+  }
 
   // -- voice leading: progression-aware voicing picks should keep the hand
   //    from jumping — never more position movement than the naive "always

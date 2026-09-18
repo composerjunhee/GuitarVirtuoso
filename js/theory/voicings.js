@@ -193,6 +193,11 @@ function analyze(frets, pcs, fifthPc) {
   for (let s = 0; s < 6; s++) {
     if (frets[s] >= 0) sounded.add(midiToPc(STRINGS[s] + frets[s]));
   }
+  // every sounded note must be a chord tone — a stray foreign pc means the
+  // entry isn't really this chord
+  for (const pc of sounded) {
+    if (!pcs.has(pc)) return null;
+  }
   for (const pc of pcs) {
     if (!sounded.has(pc) && !(pcs.size > 3 && pc === fifthPc)) return null;
   }
