@@ -17,6 +17,7 @@ export const GENRES = {
   blues:     { ko: '블루스',    en: 'Blues' },
   latin:     { ko: '라틴/보사', en: 'Latin/Bossa' },
   folk:      { ko: '포크',      en: 'Folk' },
+  custom:    { ko: '내 곡',     en: 'Mine' },
 };
 
 export const STANDARDS = [

@@ -12,18 +12,19 @@
 // built here inside #songsBody; strings are a module-local {ko,en} table
 // like ear.js.
 
-import { makeChord, chordSymbol, requiredPcs } from '../theory/chords.js';
+import { makeChord, chordSymbol, requiredPcs, QUALITIES, QUALITY_ORDER }
+  from '../theory/chords.js';
 import { voicingsFor, voiceLead } from '../theory/voicings.js';
 import { preferFlat, pcName } from '../theory/notes.js';
 import { STANDARDS, GENRES } from '../data/standards.js';
-import { segRow, showBanner } from '../ui/components.js';
+import { segRow, showBanner, rootPicker } from '../ui/components.js';
 import { Metronome } from '../audio/metronome.js';
 import { playVoicing } from '../audio/pluck.js';
 import { audioCtx } from '../audio/engine.js';
 import { mic } from '../audio/input.js';
 import { profileFromSpectrum, matchChord } from '../audio/chordDetect.js';
 import { t, getLang, onLangChange } from '../i18n.js';
-import { recordAttempt } from '../state.js';
+import { recordAttempt, settings } from '../state.js';
 
 const STR = {
   ko: {
@@ -56,6 +57,14 @@ const STR = {
     loopInf: '계속',
     search: '곡 검색…',
     noMatch: '결과 없음',
+    edit: '편집',
+    apply: '적용',
+    cancel: '취소',
+    resetChart: '초기화',
+    saveAs: '다른 이름으로 저장',
+    savePh: '새 악보 이름',
+    saved: '저장됨',
+    slotAt: (n, b) => `${n}마디 · ${b}박`,
   },
   en: {
     song: 'Song',
@@ -87,10 +96,20 @@ const STR = {
     loopInf: '∞',
     search: 'Search songs…',
     noMatch: 'No matches',
+    edit: 'Edit',
+    apply: 'Apply',
+    cancel: 'Cancel',
+    resetChart: 'Reset chart',
+    saveAs: 'Save as…',
+    savePh: 'New chart name',
+    saved: 'Saved',
+    slotAt: (n, b) => `bar ${n} · beat ${b}`,
   },
 };
 
 const setup = { song: STANDARDS[0].id, bpm: 120, mic: false, loops: 2 };
+
+const LS_SONGS = 'gt.songs';     // saved custom charts (progBuilder pattern)
 
 let body = null;                 // #songsBody
 let panel = 'setup';             // 'setup' | 'run' | 'result'
@@ -99,6 +118,9 @@ let starting = false;            // guards the async mic.start() in startSession
 let metro = null;
 let cellEls = [];                // .chart-cell per display bar
 let lastPip = null;              // the lit .chart-beats pip (cleared each beat)
+let lastLane = null;             // the lit .chart-lane (cleared with lastPip)
+let editTarget = null;           // {slot, at:null|offset} — editor's target
+let editSel = null;              // {root, q} picked in the open editor
 let timers = new Set();          // pending visual-sync timeouts
 let pollTimer = null;
 let voteRing = [];               // sliding window of recent match results
@@ -115,20 +137,24 @@ function later(fn, ms) {
 
 // ---------- pure layout helper (exported for the selftest) ----------
 
-// Flat slot list → display cells: a `half` pair shares one cell (2 beats
-// per chord); any other slot fills its own 4-beat bar. A malformed lone
+// Slot width in beats: an explicit `beats` (custom charts may carry 1 or
+// 3 after an in-chart split), else 2 for a `half` slot, else a full bar.
+const slotBeats = b => b.beats || (b.half ? 2 : 4);
+
+// Flat slot list → display cells: greedy fill — slots accumulate into a
+// cell until the next would push it past 4 beats (a `half` pair lands
+// 2+2; edited 1- or 3-beat slots join whatever fits). Songs whose bars
+// all sum to 4 get exactly one cell per original bar; a malformed lone
 // half still gets a cell to itself rather than swallowing the next bar.
 export function barCells(song) {
   const cells = [];
-  const bars = song.bars;
-  for (let i = 0; i < bars.length; i++) {
-    if (bars[i].half && bars[i + 1] && bars[i + 1].half) {
-      cells.push({ slots: [i, i + 1] });
-      i++;
-    } else {
-      cells.push({ slots: [i] });
-    }
-  }
+  let cur = null, sum = 0;
+  song.bars.forEach((b, i) => {
+    const w = slotBeats(b);
+    if (!cur || sum + w > 4) { cur = { slots: [] }; cells.push(cur); sum = 0; }
+    cur.slots.push(i);
+    sum += w;
+  });
   return cells;
 }
 
@@ -160,6 +186,7 @@ function render() {
         <span class="run-ctl">
           <button id="sgRestart" class="ghost sg-icon" data-st="restart">↺</button>
           <button id="sgPause" class="ghost sg-icon" data-st="pause">⏸</button>
+          <button id="sgEdit" class="ghost sg-icon" data-s="edit"></button>
           <button id="sgEnd" class="ghost" data-s="end"></button>
         </span>
       </div>
@@ -167,6 +194,20 @@ function render() {
       <div class="sg-nowbar"><span id="sgNow" class="sg-now"></span></div>
       <div id="sgFeedback" class="feedback sg-fb"></div>
       <div id="sgChart" class="chart-scroll"><div id="sgCells" class="chart-grid"></div></div>
+      <div id="sgEditBar" class="chip-row wrap sg-editbar" hidden>
+        <input id="sgSaveName" type="text" class="gt-input" maxlength="40">
+        <button id="sgSaveAs" class="primary" data-s="saveAs"></button>
+        <button id="sgReset" class="ghost" data-s="resetChart"></button>
+      </div>
+      <div id="sgEditPanel" class="chart-edit" hidden>
+        <div class="chip-row"><span id="sgEditAt" class="row-label mono"></span>
+          <select id="sgEditQ" class="gt-select"></select></div>
+        <div id="sgEditRoots"></div>
+        <div class="chip-row">
+          <button id="sgEditApply" class="primary" data-s="apply"></button>
+          <button id="sgEditCancel" class="ghost" data-s="cancel"></button>
+        </div>
+      </div>
       <div class="chip-row bpm-row" style="justify-content:center">
         <span class="row-label">BPM</span>
         <button id="sgBpmLiveDown" class="chip bpm-step" aria-label="BPM down">−</button>
@@ -211,6 +252,15 @@ function wire() {
   q('sgBpmUp').addEventListener('click', () => setBpm(setup.bpm + 1));
   q('sgBpmLiveDown').addEventListener('click', () => setBpm(setup.bpm - 1));
   q('sgBpmLiveUp').addEventListener('click', () => setBpm(setup.bpm + 1));
+  // in-chart editing: mode toggle, slot editor, reset + save-as
+  q('sgEdit').addEventListener('click', toggleEdit);
+  q('sgEditApply').addEventListener('click', applyEdit);
+  q('sgEditCancel').addEventListener('click', closeEditor);
+  q('sgReset').addEventListener('click', resetChartEdits);
+  q('sgSaveAs').addEventListener('click', saveChartAs);
+  const qsel = q('sgEditQ');
+  QUALITY_ORDER.forEach(k => qsel.add(new Option(QUALITIES[k].label, k)));
+  qsel.addEventListener('change', () => { if (editSel) editSel.q = qsel.value; });
 }
 
 function fillStrings() {
@@ -221,6 +271,7 @@ function fillStrings() {
     el.setAttribute('aria-label', s(el.dataset.st));
   });
   q('sgSongSearch').placeholder = s('search');
+  q('sgSaveName').placeholder = s('savePh');
   paintPauseBtn();
 }
 
@@ -251,6 +302,7 @@ const songLabel = p => p.label + (Number.isInteger(p.key)
   ? ` (${pcName(p.key, { flat: preferFlat(p.key) })}${p.minor ? 'm' : ''})` : '');
 
 function fillSongSelect(filter = '') {
+  registerCustomSongs();           // pick up charts saved since last fill
   const sel = q('sgSong');
   const needle = foldText(filter.trim());
   sel.replaceChildren();
@@ -318,38 +370,20 @@ async function startSession() {
       }
     }
     const song = STANDARDS.find(x => x.id === setup.song) || STANDARDS[0];
-    // canonical key like the strum/practice pickers; minor-flagged tunes
-    // (Gm, Cm…) are flat keys, so spell with flats
-    const flat = preferFlat(song.key) || !!song.minor;
-    const cells = barCells(song);
-    const chords = song.bars.map(b => makeChord(song.key + b.off, b.q));
-    // voice-lead the whole sequence up front; a null slot falls back to the
-    // chord's top voicing (stays null only if it has none — that slot just
-    // skips the reference strum / string template)
-    const led = voiceLead(chords);
-    const items = song.bars.map((b, i) => ({
-      chord: chords[i],
-      sym: chordSymbol(chords[i], { flat }),
-      voicing: led[i] ?? voicingsFor(chords[i])[0] ?? null,
-      beats: b.half ? 2 : 4,      // a `half` slot shares its bar (2 beats)
-      done: false, passed: false, // mic-scoring outcome
-      cell: 0, slot: 0,           // display position — filled below
-      el: null,                   // .chart-sym span — filled by buildChart
-    }));
-    cells.forEach((cell, ci) => cell.slots.forEach((slotIdx, k) => {
-      items[slotIdx].cell = ci;
-      items[slotIdx].slot = k;
-    }));
     session = {
-      song, cells, items,
-      totalBeats: items.reduce((a, it) => a + it.beats, 0),
+      song,
+      // working copy of the chart — the in-chart editor rewrites these
+      // slots and buildFromSlots() re-derives items/cells from them
+      slots: song.bars.map(b => ({ off: b.off, q: b.q, beats: slotBeats(b) })),
+      items: [], cells: [], totalBeats: 0,   // filled by buildFromSlots
       ci: 0,                       // index into items of the sounding chord
-      itemLeft: items[0].beats,    // beats left in items[ci]
+      itemLeft: 0,                 // beats left in items[ci] (set below)
       sb: -1,                      // session beat (-1 until the count-in ends)
       beatShift: -4,               // sb = metro beatIndex + beatShift
       seekBeat: -1,                // beat a seek/resume pre-positioned (re-sounds, no re-tick)
       countin: true,
       paused: false,
+      editing: false,              // chart edit mode: taps edit, not seek
       loops: setup.loops,          // laps to play (Infinity = until End)
       loopsDone: 0,                // laps completed so far
       micOn: setup.mic,
@@ -357,6 +391,8 @@ async function startSession() {
       scored: 0, hits: 0, streak: 0, best: 0, missed: [],
       seenOnset: mic.lastOnset,    // attacks before Start don't count
     };
+    buildFromSlots();
+    session.itemLeft = session.items[0].beats;
     voteRing = [];
     showPanel('run');
     paintRun();
@@ -368,6 +404,35 @@ async function startSession() {
     const b = q('sgStart');
     if (b) b.disabled = false;
   }
+}
+
+// (Re)derive items + display cells from session.slots — the flat working
+// chart. Runs at session start and after every in-chart edit; voice-leads
+// the whole sequence up front (a null voicing slot just skips the
+// reference strum / string template) and fills item.cell/slot from the
+// cell grouping. All verdicts start cleared.
+function buildFromSlots() {
+  const se = session;
+  // canonical key like the strum/practice pickers; minor-flagged tunes
+  // (Gm, Cm…) are flat keys, so spell with flats
+  const flat = preferFlat(se.song.key) || !!se.song.minor;
+  const chords = se.slots.map(b => makeChord(se.song.key + b.off, b.q));
+  const led = voiceLead(chords);
+  se.items = se.slots.map((b, i) => ({
+    chord: chords[i],
+    sym: chordSymbol(chords[i], { flat }),
+    voicing: led[i] ?? voicingsFor(chords[i])[0] ?? null,
+    beats: b.beats,
+    done: false, passed: false, // mic-scoring outcome
+    cell: 0, slot: 0,           // display position — filled below
+    el: null,                   // .chart-sym span — filled by buildChart
+  }));
+  se.cells = barCells({ bars: se.slots });
+  se.cells.forEach((cell, ci) => cell.slots.forEach((slotIdx, k) => {
+    se.items[slotIdx].cell = ci;
+    se.items[slotIdx].slot = k;
+  }));
+  se.totalBeats = se.items.reduce((a, it) => a + it.beats, 0);
 }
 
 // Fires ~120ms before the beat sounds — schedule the count-in flash, the
@@ -470,13 +535,19 @@ function barStart(sb) {
   paintScore();
 }
 
-// live fill: light the sounding beat's pip inside the current cell
+// live fill: light the sounding beat's pip AND its lane column inside the
+// current cell (the lane is a faint full-height tint — easier to eye-track
+// than the 4px pip)
 function beatNow(b) {
   const se = session;
   if (!se || se.done || se.countin) return;
   if (lastPip) { lastPip.classList.remove('now'); lastPip = null; }
-  const pip = cellEls[se.sb >> 2]?.querySelectorAll('.chart-beats i')[b];
+  if (lastLane) { lastLane.classList.remove('now'); lastLane = null; }
+  const cell = cellEls[se.sb >> 2];
+  const pip = cell?.querySelectorAll('.chart-beats i')[b];
   if (pip) { pip.classList.add('now'); lastPip = pip; }
+  const lane = cell?.querySelectorAll('.chart-lane')[b];
+  if (lane) { lane.classList.add('now'); lastLane = lane; }
 }
 
 // Count-in overlay: the big number over the run card. .tick re-arms the CSS
@@ -524,19 +595,45 @@ function paintRun() {
   q('sgBpmLive').value = setup.bpm;
   q('sgBpmLiveVal').textContent = setup.bpm;
   q('sgRun').classList.toggle('paused', !!session.paused);
+  // edit mode survives a re-render (language switch); a rebuild always
+  // lands with the slot editor closed
+  q('sgEdit').classList.toggle('sel', !!session.editing);
+  q('sgEditBar').hidden = !session.editing;
+  q('sgEditPanel').hidden = true;
+  editTarget = null;
+  editSel = null;
   paintPauseBtn();
   paintScore();
 }
 
-// One cell per display bar: chord symbol(s) on top — a half-bar cell splits
-// into two .chart-sym spans — and a 4-pip beat strip below.
+// One cell per display bar: chord symbol(s) on top — a split cell gets one
+// .chart-sym per slot — a sustain bar and a 4-pip beat strip below, and a
+// .chart-lanes overlay under everything (the per-beat glow; in edit mode
+// the lanes become the insert-split tap targets).
 function buildChart() {
   const grid = q('sgCells');
   grid.replaceChildren();
-  lastPip = null;                // old pip node is being discarded anyway
+  grid.classList.toggle('chart-editing', !!session.editing);
+  lastPip = null;                // old pip/lane nodes are discarded anyway
+  lastLane = null;
   cellEls = session.cells.map(cell => {
     const el = document.createElement('div');
     el.className = 'chart-cell';
+    // beat lanes come first: the same 4-column grid as the content rows
+    // but absolutely positioned underneath them (pointer-events stay off
+    // until .chart-editing turns them into split targets)
+    const lanes = document.createElement('div');
+    lanes.className = 'chart-lanes';
+    lanes.setAttribute('aria-hidden', 'true');
+    for (let b = 0; b < 4; b++) {
+      const lane = document.createElement('i');
+      lane.className = 'chart-lane';
+      lane.addEventListener('click', e => {
+        e.stopPropagation();
+        if (session && session.editing) laneTap(cell, b);
+      });
+      lanes.append(lane);
+    }
     const syms = document.createElement('div');
     syms.className = 'chart-syms';
     const spans = document.createElement('div');
@@ -552,10 +649,11 @@ function buildChart() {
       sp.className = 'chart-sym' + (cell.slots.length > 1 ? ' half' : '');
       sp.textContent = it.sym;
       sp.style.gridColumn = `${beatAt + 1} / span ${it.beats}`;
-      // symbol tap = audition the voicing + seek to the slot
+      // symbol tap = audition + seek; in edit mode it opens the slot editor
       sp.addEventListener('click', e => {
         e.stopPropagation();
-        seekToItem(slotIdx, true);
+        if (session.editing) openEditor(slotIdx);
+        else seekToItem(slotIdx, true);
       });
       it.el = sp;
       syms.append(sp);
@@ -568,9 +666,12 @@ function buildChart() {
     beats.className = 'chart-beats';
     beats.setAttribute('aria-hidden', 'true');
     for (let i = 0; i < 4; i++) beats.append(document.createElement('i'));
-    // cell background tap = seek to the bar's first slot (no audition)
-    el.addEventListener('click', () => seekToItem(cell.slots[0]));
-    el.append(syms, spans, beats);
+    // cell background tap = seek to the bar's first slot (no audition);
+    // inert while editing
+    el.addEventListener('click', () => {
+      if (!session.editing) seekToItem(cell.slots[0]);
+    });
+    el.append(lanes, syms, spans, beats);
     grid.append(el);
     return el;
   });
@@ -735,6 +836,127 @@ function restartSession() {
   startSession();
 }
 
+// ---------- in-chart editing ----------
+
+// 편집 toggle — edit mode pauses the clock first (the run stays right
+// where it is) and retargets chart taps: a symbol opens its slot in the
+// editor, a beat lane splits the slot it lands in, and the cell
+// background goes inert. Leaving edit mode keeps the paused position.
+function toggleEdit() {
+  const se = session;
+  if (!se || se.done) return;
+  se.editing = !se.editing;
+  if (se.editing && !se.paused) togglePause();   // freeze before edits
+  q('sgEdit').classList.toggle('sel', se.editing);
+  q('sgCells').classList.toggle('chart-editing', se.editing);
+  q('sgEditBar').hidden = !se.editing;
+  if (!se.editing) closeEditor();
+}
+
+// Lane b of a cell was tapped: split the slot that owns b into
+// [start,b) — which keeps its chord — plus [b,end), the new slot the
+// editor fills. A lane on a slot's first beat has nothing to split (beat
+// 0 of a bar never does) and a lane past the slots' span is inert.
+function laneTap(cell, b) {
+  const se = session;
+  let acc = 0;
+  for (const slotIdx of cell.slots) {
+    const w = se.slots[slotIdx].beats;
+    if (b > acc && b < acc + w) { openEditor(slotIdx, b - acc); return; }
+    acc += w;
+    if (acc > b) return;            // b sat on a slot boundary — no split
+  }
+}
+
+// Beat offset of a slot's start inside its cell (for the bar·beat hint).
+function slotBeatInCell(se, slotIdx) {
+  let beat0 = 0;
+  for (const si of se.cells[se.items[slotIdx].cell].slots) {
+    if (si === slotIdx) break;
+    beat0 += se.slots[si].beats;
+  }
+  return beat0;
+}
+
+// Open the slot editor under the chart. at=null replaces the slot's chord
+// in place; at=k splits it k beats in and the new right-hand slot takes
+// the pick. The picker opens on the slot's current chord either way.
+function openEditor(slotIdx, at = null) {
+  const se = session;
+  const sl = se.slots[slotIdx];
+  if (!sl) return;
+  editTarget = { slot: slotIdx, at };
+  editSel = { root: (se.song.key + sl.off) % 12, q: sl.q };
+  const beat = slotBeatInCell(se, slotIdx) + (at ?? 0);
+  q('sgEditAt').textContent = s('slotAt')(se.items[slotIdx].cell + 1, beat + 1);
+  rootPicker(q('sgEditRoots'), editSel.root, pc => { editSel.root = pc; },
+    { flat: settings.flat, lang: getLang() });
+  q('sgEditQ').value = editSel.q;
+  q('sgEditPanel').hidden = false;
+}
+
+function closeEditor() {
+  editTarget = null;
+  editSel = null;
+  const p = q('sgEditPanel');
+  if (p) p.hidden = true;
+}
+
+// Apply writes back into session.slots — either replacing the slot's
+// chord (its span is kept) or splitting it and giving the new right-hand
+// piece the picked chord — then rebuilds everything derived from slots.
+function applyEdit() {
+  const se = session;
+  if (!se || !editTarget || !editSel) return;
+  const { slot, at } = editTarget;
+  const orig = se.slots[slot];
+  if (!orig) { closeEditor(); return; }
+  const off = (((editSel.root - se.song.key) % 12) + 12) % 12;
+  if (at === null) {
+    se.slots[slot] = { off, q: editSel.q, beats: orig.beats };
+  } else {
+    if (at < 1 || at >= orig.beats) { closeEditor(); return; }
+    se.slots.splice(slot, 1,
+      { off: orig.off, q: orig.q, beats: at },
+      { off, q: editSel.q, beats: orig.beats - at });
+  }
+  closeEditor();
+  rebuildFromEdits();
+}
+
+// Slots changed → re-derive items/cells/chart DOM, then restore the
+// playhead to the same session beat (verdicts are cleared — fresh
+// items — but the position is preserved).
+function rebuildFromEdits() {
+  const se = session;
+  const sb = se.sb;
+  buildFromSlots();
+  se.ci = 0;
+  se.itemLeft = se.items[0].beats;
+  if (sb > 0) {
+    // find the slot whose span contains sb and give it the leftover beats
+    let acc = 0, idx = 0;
+    while (idx < se.items.length - 1 && acc + se.items[idx].beats <= sb) {
+      acc += se.items[idx].beats;
+      idx++;
+    }
+    se.ci = idx;
+    se.itemLeft = Math.max(1, acc + se.items[idx].beats - sb);
+  }
+  se.scored = 0; se.hits = 0; se.streak = 0; se.missed = [];
+  paintRun();
+  if (sb >= 0 && !se.countin) beatNow(sb % 4);   // re-light the frozen beat
+}
+
+// 초기화 — drop every edit; the working chart reloads from the song.
+function resetChartEdits() {
+  const se = session;
+  if (!se || se.done) return;
+  se.slots = se.song.bars.map(b => ({ off: b.off, q: b.q, beats: slotBeats(b) }));
+  closeEditor();
+  rebuildFromEdits();
+}
+
 // ---------- mic scoring ----------
 
 // Poll ~14×/s — the same gate as practice.js: a chord passes when the
@@ -807,6 +1029,7 @@ function cleanupAudio() {
 function clearLive() {
   hideCountin();
   if (lastPip) { lastPip.classList.remove('now'); lastPip = null; }
+  if (lastLane) { lastLane.classList.remove('now'); lastLane = null; }
 }
 
 function endSession() {          // "끝내기" — stop the clock, show stats
@@ -854,6 +1077,71 @@ function paintResult() {
     (missed.length
       ? `<span style="color:var(--bad)">${s('missed')}: ${missed.join(', ')}</span>`
       : '');
+}
+
+// ---------- custom songs (gt.songs) ----------
+
+// "Save as…" persists the edited chart in localStorage 'gt.songs' —
+// the progBuilder pattern, one store per feature. Entries keep the
+// STANDARDS shape so every chart reader stays happy: 4-beat slots stay
+// {off,q}, 2-beat slots keep `half:true` (the classic pair form), and
+// only 1/3-beat splits carry an explicit `beats`.
+//   [{ id:'custom-<ts>', label, genre:'custom', key, minor?, bars:[…] }]
+// registerCustomSongs() pushes them into STANDARDS so every
+// GENRES-grouped picker (songs + strum + practice) lists them under the
+// 'custom' optgroup for free.
+export function getCustomSongs() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_SONGS));
+    if (!Array.isArray(raw)) return [];
+    return raw.filter(p =>
+      p && typeof p.id === 'string' && typeof p.label === 'string' &&
+      Number.isInteger(p.key) && p.key >= 0 && p.key < 12 &&
+      Array.isArray(p.bars) && p.bars.length > 0 &&
+      p.bars.every(b =>
+        b && Number.isInteger(b.off) && b.off >= 0 && b.off < 12 &&
+        typeof b.q === 'string' &&
+        !!(QUALITIES[b.q] && Array.isArray(QUALITIES[b.q].intervals)) &&
+        (b.beats === undefined ||
+          (Number.isInteger(b.beats) && b.beats >= 1 && b.beats <= 4))));
+  } catch {
+    return [];
+  }
+}
+
+function registerCustomSongs() {
+  for (const cs of getCustomSongs()) {
+    if (!STANDARDS.some(x => x.id === cs.id)) STANDARDS.push(cs);
+  }
+}
+
+// Register at import time: app.js imports every screen before any init
+// runs, so the custom optgroup is populated in all pickers' first paint.
+// (The Node selftest stubs localStorage to empty — this is a no-op there.)
+registerCustomSongs();
+
+function saveChartAs() {
+  const se = session;
+  if (!se || se.done) return;
+  const label = q('sgSaveName').value.trim() || se.song.label;
+  const bars = se.slots.map(sl => {
+    const b = { off: sl.off, q: sl.q };
+    if (sl.beats === 2) b.half = true;
+    else if (sl.beats !== 4) b.beats = sl.beats;
+    return b;
+  });
+  const song = {
+    id: `custom-${Date.now()}`, label, genre: 'custom',
+    key: se.song.key, minor: !!se.song.minor, bars,
+  };
+  const list = getCustomSongs();
+  list.push(song);
+  try { localStorage.setItem(LS_SONGS, JSON.stringify(list)); }
+  catch { return; }                      // storage full/blocked — stay put
+  STANDARDS.push(song);                  // joins every GENRES-grouped picker
+  setup.song = song.id;                  // the next run picks it up
+  fillSongSelect(q('sgSongSearch').value);
+  showBanner(s('saved'), 2500);
 }
 
 // ---------- wiring ----------

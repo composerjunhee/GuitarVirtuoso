@@ -141,8 +141,9 @@ async function startSession() {
       const chord = { root: (setup.key + b.off) % 12, quality: b.q, bass: null };
       return { sym: chordSymbol(chord, { flat }),
                chord, scored: false,
-               // a `half` bar lasts 2 beats; the next half shares its bar
-               beats: b.half ? 2 : 4 };
+               // a `half` bar lasts 2 beats; the next half shares its bar.
+               // custom songs may carry an explicit `beats` (1 or 3)
+               beats: b.beats || (b.half ? 2 : 4) };
     });
     // voice-lead the chain once: the displayed shape doubles as the mic
     // template, so nearby-position voicings are what the player must play

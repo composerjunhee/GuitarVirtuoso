@@ -1,6 +1,6 @@
 // Cache-first service worker. Bump CACHE on every deploy.
 
-const CACHE = 'gv-v13';  // chart cells: beat-aligned chord lanes
+const CACHE = 'gv-v14';  // beat-lane highlight + in-chart editing + save custom charts
 
 const ASSETS = [
   './',

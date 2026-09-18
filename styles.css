@@ -1201,6 +1201,7 @@ input:focus-visible, select:focus-visible {
   .chart-grid { grid-template-columns: repeat(2, 1fr); }
 }
 .chart-cell {
+  position: relative;              /* anchor for the .chart-lanes overlay */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1262,6 +1263,47 @@ input:focus-visible, select:focus-visible {
 }
 .chart-cell.cur .chart-beats i { background: rgba(232, 163, 61, .35); }
 .chart-beats i.now { background: var(--accent); }
+/* beat lanes: a full-cell 4-column overlay UNDER the content — the
+   current beat's lane glows faintly so progress is eye-trackable (the
+   4px pip alone is easy to lose). Same columns + gap as the content
+   grids; the side padding matches .chart-cell's so lanes align with the
+   pip columns exactly. */
+.chart-lanes {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  column-gap: 4px;
+  padding: 0 5px;
+  pointer-events: none;
+}
+/* siblings must be positioned to paint above the overlay (DOM order
+   decides among them — lanes come first in buildChart) */
+.chart-syms, .chart-spans, .chart-beats { position: relative; }
+.chart-lane { border-radius: 4px; }
+.chart-lane.now { background: rgba(232, 163, 61, .10); }
+/* edit mode: lanes rise between the pip strips and the symbols and turn
+   into the insert-split tap targets; .chart-syms stays on top so symbol
+   taps still open the slot editor */
+.chart-editing .chart-lanes { z-index: 1; }
+.chart-editing .chart-syms { z-index: 2; }
+.chart-editing .chart-lane { pointer-events: auto; cursor: pointer; }
+.chart-editing .chart-lane:hover { background: rgba(232, 163, 61, .14); }
+/* the 편집 toggle lights while edit mode is on */
+.ghost.sel { color: var(--accent); border-color: var(--accent); }
+/* edit-mode bar (name + save + reset) and the slot editor — styled like
+   the setup card's inner boxes, under the chart */
+.sg-editbar { margin-top: 8px; }
+.sg-editbar .gt-input { flex: 1; min-width: 0; width: auto; margin: 0; }
+.chart-edit {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg2);
+  padding: 8px 10px 10px;
+  margin-top: 8px;
+}
+.chart-edit .root-grid { margin: 6px 0 8px; }
 #sgResultBody { font-family: var(--mono); font-size: 14px; line-height: 1.9; }
 @media (prefers-reduced-motion: reduce) {
   .chart-scroll { scroll-behavior: auto; }

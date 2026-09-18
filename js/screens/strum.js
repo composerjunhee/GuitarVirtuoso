@@ -413,10 +413,11 @@ async function startSession() {
                       : settings.flat;
     const syms = chords.map(c => chordSymbol(c, { flat }));
     // a `half` item lasts 2 beats and shares its bar with the next half;
-    // everything else occupies the full 4-beat bar
+    // everything else occupies the full 4-beat bar. Custom songs may carry
+    // an explicit `beats` (1 or 3) instead of the half flag.
     const items = chords.map((c, i) => ({
       chord: c, sym: syms[i], voicing: voicings[i],
-      beats: prog && prog.bars[i].half ? 2 : 4,
+      beats: prog ? (prog.bars[i].beats || (prog.bars[i].half ? 2 : 4)) : 4,
     }));
     session = {
       pattern, prog, items,

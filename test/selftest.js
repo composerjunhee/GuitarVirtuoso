@@ -494,14 +494,17 @@ export async function runAll(report = console.log) {
       s.bars.some(b => !Number.isInteger(b.off) || b.off < 0 || b.off > 11);
     ok(!badOff, `${s.id}: key + offsets in 0–11`);
     // half:true marks a two-chords-in-one-bar slot — they must arrive in
-    // consecutive pairs, never a lone half or an odd run
+    // consecutive pairs, never a lone half or an odd run. (Custom songs
+    // saved from the in-chart editor may legitimately split one of a
+    // pair — the pairing rule only binds the curated catalog.)
     let run = 0, halvesOk = true;
     for (const b of s.bars) {
       if (b.half) run++;
       else { if (run % 2) halvesOk = false; run = 0; }
     }
     if (run % 2) halvesOk = false;
-    ok(halvesOk, `${s.id}: half-bars in consecutive pairs`);
+    ok(halvesOk || s.genre === 'custom',
+      `${s.id}: half-bars in consecutive pairs`);
     let threw = '';
     try {
       for (const b of s.bars) makeChord(s.key + b.off, b.q);
@@ -566,17 +569,31 @@ export async function runAll(report = console.log) {
       'barCells: Autumn Leaves → 32 cells, 2 split',
       `cells=${cells.length} split=${cells.filter(c => c.slots.length === 2).length}`);
   }
-  { // every standard: cells partition the slot list in order, ≤2 per cell —
-    // total beats (slots×4 minus halves) must equal cells×4
+  { // every standard: cells partition the slot list in order, ≤4 per cell
+    // (edited charts can hold four 1-beat slots) — total beats must equal
+    // cells×4. `beats` (custom songs) and `half` both feed the width.
     const allOk = STANDARDS.every(sd => {
       const cells = songs.barCells(sd);
       const flat = cells.flatMap(c => c.slots);
-      const beats = sd.bars.reduce((a, b) => a + (b.half ? 2 : 4), 0);
-      return cells.every(c => c.slots.length <= 2) &&
+      const beats = sd.bars.reduce((a, b) => a + (b.beats || (b.half ? 2 : 4)), 0);
+      return cells.every(c => c.slots.length <= 4) &&
         flat.length === sd.bars.length && flat.every((v, i) => v === i) &&
         beats === cells.length * 4;
     });
     ok(allOk, 'every standard: cells partition slots in order');
+  }
+  { // the in-chart editor's working model: explicit `beats` (1/3) packs
+    // greedily into 4-beat cells alongside classic half/full slots
+    const cells = songs.barCells({ bars: [
+      { off: 0, q: '', beats: 1 }, { off: 7, q: '7', beats: 3 },
+      { off: 0, q: '' },
+      { off: 5, q: 'maj7', half: true }, { off: 7, q: '7', half: true },
+    ]});
+    ok(cells.length === 3 &&
+      cells[0].slots.length === 2 && cells[2].slots.length === 2,
+      'barCells: 1+3 beat split + classic slots group greedily');
+    ok(!!GENRES.custom && Object.keys(GENRES).at(-1) === 'custom',
+      'GENRES.custom exists as the last group');
   }
 
   // -- fretboard game: position math (pure helpers, no DOM needed) --
@@ -643,9 +660,9 @@ export async function runAll(report = console.log) {
   ok(['classical', 'kpop'].every(g => g in GENRES &&
     STANDARDS.some(sd => sd.genre === g)),
     'new classical + kpop genres exist and non-empty');
-  ok(Object.keys(GENRES).every(g =>
+  ok(Object.keys(GENRES).filter(g => g !== 'custom').every(g =>
     STANDARDS.filter(sd => sd.genre === g).length >= 3),
-    'every genre has ≥3 songs',
+    'every preset genre has ≥3 songs (custom starts empty)',
     Object.keys(GENRES).map(g =>
       `${g}=${STANDARDS.filter(sd => sd.genre === g).length}`).join(' '));
   { // every bar resolves to a symbol that parseSymbol reads back — the
@@ -668,8 +685,8 @@ export async function runAll(report = console.log) {
     // the same barCells contract the song-mode chart relies on
     const cells = songs.barCells(sd);
     const flat = cells.flatMap(c => c.slots);
-    const beats = sd.bars.reduce((a, b) => a + (b.half ? 2 : 4), 0);
-    ok(cells.every(c => c.slots.length <= 2) &&
+    const beats = sd.bars.reduce((a, b) => a + (b.beats || (b.half ? 2 : 4)), 0);
+    ok(cells.every(c => c.slots.length <= 4) &&
       flat.length === sd.bars.length && flat.every((v, i) => v === i) &&
       beats === cells.length * 4,
       `${sd.id}: barCells partitions slots, beats = 4×cells`,
