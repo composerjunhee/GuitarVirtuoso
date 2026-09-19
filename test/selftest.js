@@ -622,6 +622,40 @@ export async function runAll(report = console.log) {
   ok(pr.CHG_PAIRS.every(([a, b]) => st.typeOf(pr.chgKey(a, b)) === 'change'),
     'every preset key classifies as change');
 
+  // -- stats → practice deeplinks (pure helpers, no DOM needed) --
+  report('practice deeplinks');
+  { // stat key → primePractice args: chords focus-drill, pairs change-drill
+    const pa = st.primeArgsFor('chg:C|G');
+    ok(pa && pa.mode === 'chg' && pa.pair[0] === 'C' && pa.pair[1] === 'G',
+      'primeArgsFor: chg:C|G → {mode:chg, pair:[C,G]}');
+    const pf = st.primeArgsFor('Am');
+    ok(pf && pf.mode === 'flash' && pf.focus.length === 1 && pf.focus[0] === 'Am',
+      'primeArgsFor: chord key → flash focus');
+    ok(st.primeArgsFor('iv:M3') === null && st.primeArgsFor('note:C') === null &&
+      st.primeArgsFor('prog:I–V–vi–IV') === null &&
+      st.primeArgsFor('E → G') === null,
+      'primeArgsFor: non-drillable types → null');
+  }
+  { // expandFocus: dedupe + drop junk + repeat to ~8 session items
+    const e1 = pr.expandFocus(['Am']);
+    ok(e1.length === 8 && e1.every(x => x === 'Am'),
+      'expandFocus: 1 chord → 8 rounds');
+    const e2 = pr.expandFocus(['Am', 'C', 'Am', 'junk!']);
+    ok(e2.length === 8 && e2.filter(x => x === 'Am').length === 4 &&
+      e2.filter(x => x === 'C').length === 4,
+      'expandFocus: 2 chords → 4× each, deduped');
+    ok(pr.expandFocus([]).length === 0 && pr.expandFocus(['???']).length === 0 &&
+      pr.expandFocus(null).length === 0,
+      'expandFocus: empty/unparseable → []');
+  }
+  { // primePractice must not throw without the practice DOM (Node / pre-init)
+    pr.primePractice({ mode: 'chg', pair: ['C', 'G'] });
+    pr.primePractice({ mode: 'flash', focus: ['Am'] });
+    pr.primePractice({ mode: 'chg', pair: ['C', 'C'] });   // same chord → ignored
+    pr.primePractice({ mode: 'chg', pair: ['???'] });      // unparseable → ignored
+    ok(true, 'primePractice runs DOM-free and ignores bad pairs');
+  }
+
   // -- song mode: chart bar layout (pure helper, no DOM needed) --
   report('song mode');
   const songs = await import('../js/screens/songs.js');

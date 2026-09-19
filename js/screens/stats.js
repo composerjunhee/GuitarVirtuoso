@@ -21,6 +21,7 @@ import { pcName } from '../theory/notes.js';
 import { getLang, onLangChange } from '../i18n.js';
 import { settings, onSetting, loadStats, loadDeck, saveDeck } from '../state.js';
 import { PROGRESSIONS } from '../data/progressions.js';
+import { primePractice } from './practice.js';
 
 const STR = {
   ko: {
@@ -46,6 +47,10 @@ const STR = {
     deckEmpty: '덱이 비어 있습니다. 라이브러리에서 코드를 추가하세요.',
     empty: '아직 연습 기록이 없습니다. 연습·청음 탭에서 코드를 연주해 보세요.',
     goPractice: '연습하러 가기',
+    practice: '연습',
+    practiceAll: '모두 연습',
+    chgPractice: '전환 연습',
+    hmPractice: '연습하기',
     reset: '이 항목 기록 지우기',
     remove: '덱에서 빼기',
     boxTitle: n => `라이트너 박스 ${n}/5`,
@@ -74,6 +79,10 @@ const STR = {
     deckEmpty: 'Deck is empty. Add chords from the Library.',
     empty: 'No practice data yet — play some chords in Practice or Ear.',
     goPractice: 'Go practice',
+    practice: 'Practice',
+    practiceAll: 'Practice all',
+    chgPractice: 'Change drill',
+    hmPractice: 'tap to practice',
     reset: 'Reset this item',
     remove: 'Remove from deck',
     boxTitle: n => `Leitner box ${n}/5`,
@@ -121,6 +130,38 @@ export function typeOf(key) {
 // the type seg, and every summary metric.
 const statEntries = stats =>
   Object.entries(stats).filter(([k, e]) => e && e.att > 0 && typeOf(k) !== 'junk');
+
+// ---------- stats → practice deeplinks ----------
+
+// A row's practice target: chord stats drill the chord, change stats
+// drill the pair — the other types have no practice drill.
+export function primeArgsFor(key) {
+  const ty = typeOf(key);
+  if (ty === 'chord') return { mode: 'flash', focus: [key] };
+  if (ty === 'change') {
+    const pair = key.slice(4).split('|');
+    if (pair.length === 2 && pair.every(p => parseSymbol(p)))
+      return { mode: 'chg', pair };
+  }
+  return null;
+}
+
+// Prime the practice setup, THEN activate the tab — the tab click
+// re-renders the practice screen off the seeded setup.
+function goPractice(args) {
+  primePractice(args);
+  document.querySelector('.tab[data-tab="practice"]')?.click();
+}
+
+// small ghost chip, sized like the reset ✕. Rows/group headers are
+// clickable themselves — the button must never bubble into their toggles.
+function practiceBtn(args, label) {
+  const b = el('button', 'chip', label || s('practice'));
+  b.style.padding = '6px 10px';
+  b.addEventListener('keydown', e => e.stopPropagation());
+  b.addEventListener('click', e => { e.stopPropagation(); goPractice(args); });
+  return b;
+}
 
 // Chord symbols stay Latin in every UI language; re-spell ♯/♭ to the current
 // setting when the stored string parses, otherwise show it verbatim. The
@@ -240,6 +281,12 @@ function itemCard(stats) {
     gh.tabIndex = 0;
     const chev = el('span', 'chev', open ? '▾' : '▸');
     gh.append(chev, el('span', '', `${s(labelKey)} (${rows.length})`));
+    // weak chord group → one-tap weak-deck session (other types: no drill)
+    if (gid === 'weak' && selType === 'chord') {
+      const all = practiceBtn({ mode: 'flash', deck: 'weak' }, s('practiceAll'));
+      all.style.marginLeft = 'auto';
+      gh.append(all);
+    }
 
     const wrap = el('div', 'stat-rows');
     wrap.hidden = !open;
@@ -293,11 +340,20 @@ function statRow(sym, e) {
   row.append(dots);
 
   // collapsed by default: hits/attempts + mean time on the correct ones
-  // (timeMs/ok), plus the two-tap reset button on the right
+  // (timeMs/ok); the action buttons on the right are a practice deeplink
+  // (chords + change pairs only) plus the two-tap reset
   const sub = el('p', 'hint mono stat-sub');
   sub.append(el('span', '',
     `✓${e.ok}/${e.att} · ${e.ok ? s('avg')((e.timeMs || 0) / e.ok) : '—'}`));
-  sub.append(resetBtn(sym));
+  const acts = el('span');
+  acts.style.cssText = 'display:inline-flex;gap:6px;align-items:center;';
+  const args = primeArgsFor(sym);
+  if (args) {
+    acts.append(practiceBtn(args,
+      typeOf(sym) === 'change' ? s('chgPractice') : s('practice')));
+  }
+  acts.append(resetBtn(sym));
+  sub.append(acts);
   row.append(sub);
   return row;
 }
@@ -346,23 +402,25 @@ const FAMILIES = [
 ];
 
 // 12 roots × 7 families; a cell aggregates every chord entry that lands in
-// it (worst box wins — a family is only as strong as its weakest member)
+// it (worst box wins — a family is only as strong as its weakest member).
+// The symbols are kept too — a non-empty cell is a focus-drill deeplink.
 function heatmapCard(entries) {
   const card = el('div', 'stats-heatmap');
   card.append(el('div', 'hm-title', s('mapTitle')));
 
-  const cells = new Map();            // "root|famIdx" → {att,ok,timeMs,box}
+  const cells = new Map();            // "root|famIdx" → {att,ok,timeMs,box,syms}
   for (const [key, e] of entries) {
     if (typeOf(key) !== 'chord') continue;
     const ch = parseSymbol(key);
     const fi = FAMILIES.findIndex(f => f.qs.has(ch.quality));
     if (fi < 0) continue;
     const ck = `${ch.root}|${fi}`;
-    const agg = cells.get(ck) || { att: 0, ok: 0, timeMs: 0, box: 5 };
+    const agg = cells.get(ck) || { att: 0, ok: 0, timeMs: 0, box: 5, syms: [] };
     agg.att += e.att;
     agg.ok += e.ok;
     agg.timeMs += e.timeMs;
     agg.box = Math.min(agg.box, boxOf(e));
+    agg.syms.push(key);
     cells.set(ck, agg);
   }
 
@@ -384,7 +442,17 @@ function heatmapCard(entries) {
           agg.box <= 2 ? 'hm-weak' : agg.box === 3 ? 'hm-learn' : 'hm-master');
         // mastery picks the color; accuracy picks how loud it is
         c.style.opacity = (0.45 + 0.55 * acc).toFixed(2);
-        c.title = `${label} — ✓${agg.ok}/${agg.att} · ${s('boxTitle')(agg.box)}`;
+        c.title = `${label} — ✓${agg.ok}/${agg.att} · ${s('boxTitle')(agg.box)}` +
+          ` · ${s('hmPractice')}`;
+        // non-empty cells deeplink into a focus drill of their chords
+        c.style.cursor = 'pointer';
+        c.setAttribute('role', 'button');
+        c.tabIndex = 0;
+        const drill = () => goPractice({ mode: 'flash', focus: agg.syms });
+        c.addEventListener('click', drill);
+        c.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); drill(); }
+        });
       }
       grid.append(c);
     }

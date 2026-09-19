@@ -35,6 +35,8 @@ let timers = new Set();        // pending metronome-sync timeouts
 let ciEl = null;               // .countin overlay inside #practiceRun
 let nbEl = null;               // #nextBeat row (built lazily — index.html untouched)
 let chgEl = null;              // #chgRun pair panel (built lazily, like nbEl)
+let pendingFocus = null;       // symbols primed by another screen's deeplink
+let focusChip = null;          // transient 'focus' deck chip in the deck seg
 
 // defer a visual to an audio-clock time, tracked for cleanup (strum.js
 // uses the same pattern — onBeat fires ~120ms early on the audio clock)
@@ -51,14 +53,14 @@ function opts() { return { flat: settings.flat, lang: getLang() }; }
 // Module-local strings (delegated-module convention — i18n.js is shared).
 const STR = {
   ko: {
-    mode: '전환', pair: '페어', custom: '직접', weak: '취약',
+    mode: '전환', pair: '페어', custom: '직접', weak: '취약', focus: '지정',
     auto: '자동 템포+', changes: '전환', streak: '연속',
     tempoUp: b => `템포 업! ${b}bpm`,
     sameChord: '같은 코드끼리는 전환할 수 없습니다.',
     sumChanges: '총 전환', sumStreak: '최고 연속', sumBpm: '최고 템포',
   },
   en: {
-    mode: 'Changes', pair: 'Pair', custom: 'custom', weak: 'weak',
+    mode: 'Changes', pair: 'Pair', custom: 'custom', weak: 'weak', focus: 'picked',
     auto: 'auto tempo+', changes: 'changes', streak: 'streak',
     tempoUp: b => `Tempo up! ${b}bpm`,
     sameChord: 'Pick two different chords.',
@@ -104,6 +106,7 @@ function renderSetup() {
     b.classList.toggle('sel', b.dataset.input === setup.input));
   document.querySelectorAll('[data-deck]').forEach(b =>
     b.classList.toggle('sel', b.dataset.deck === setup.deck));
+  paintFocusChip();
   $('flashOpts').hidden = setup.mode !== 'flash';
   $('progOpts').hidden = setup.mode !== 'prog';
   $('chgOpts').hidden = setup.mode !== 'chg';
@@ -119,6 +122,26 @@ function renderSetup() {
   fillProgSelect($('progSearch').value, customs);
   $('progSearch').placeholder = t('pr.search');
   rootPicker($('keyChips'), setup.key, id => { setup.key = id; }, opts());
+}
+
+// A primed 'focus' deck gets a transient chip after the fixed deck chips —
+// it hides again the moment another deck is picked. (style.display, not
+// `hidden` — .chip's inline-flex beats the attribute.)
+function paintFocusChip() {
+  const on = setup.deck === 'focus';
+  if (on && !focusChip) {
+    focusChip = document.createElement('button');
+    focusChip.className = 'chip sel';
+    focusChip.addEventListener('click', renderSetup);   // already selected
+    document.querySelector('[data-deck="weak"]')?.after(focusChip);
+  }
+  if (focusChip) {
+    focusChip.style.display = on ? '' : 'none';
+    if (on) {
+      const shown = [...new Set(pendingFocus)].slice(0, 3).join('·');
+      focusChip.textContent = `${cs('focus')}: ${shown}`;
+    }
+  }
 }
 
 // ---------- chg setup UI ----------
@@ -234,18 +257,79 @@ function fillProgSelect(filter = '', customs = getCustomProgressions()) {
   }
 }
 
+// the 10 weakest recorded chords (box ≤ 2) — the 'weak' deck and also the
+// fallback when a focus deeplink primes nothing usable
+function weakDeck() {
+  const s = loadStats();
+  return Object.entries(s)
+    // parseable chord symbols only — interval/note/prog stat keys must
+    // not crowd real chords out of the 10-slot weak deck
+    .filter(([sym, e]) => e.att > 0 && e.box <= 2 && parseSymbol(sym))
+    .sort((a, b) => a[1].box - b[1].box || (a[1].ok / a[1].att) - (b[1].ok / b[1].att))
+    .slice(0, 10).map(([sym]) => sym);
+}
+
 function resolveDeck() {
   if (setup.deck === 'custom') return loadDeck();
-  if (setup.deck === 'weak') {
-    const s = loadStats();
-    return Object.entries(s)
-      // parseable chord symbols only — interval/note/prog stat keys must
-      // not crowd real chords out of the 10-slot weak deck
-      .filter(([sym, e]) => e.att > 0 && e.box <= 2 && parseSymbol(sym))
-      .sort((a, b) => a[1].box - b[1].box || (a[1].ok / a[1].att) - (b[1].ok / b[1].att))
-      .slice(0, 10).map(([sym]) => sym);
+  if (setup.deck === 'weak') return weakDeck();
+  if (setup.deck === 'focus') {
+    const focus = expandFocus(pendingFocus);
+    return focus.length ? focus : weakDeck();
   }
   return DECKS[setup.deck] || [];
+}
+
+// ---------- stats → practice deeplinks ----------
+
+// A focus drill repeats its chords so the session isn't a one-off:
+// 1 chord → 8 rounds, 2 → 4× each, n → ceil(8/n) passes. The session's
+// shuffle+slice(0,10) trims any overshoot.
+export function expandFocus(symbols, target = 8) {
+  const okSym = sym => typeof sym === 'string' && !!parseSymbol(sym);
+  const uniq = [...new Set((symbols || []).filter(okSym))];
+  if (!uniq.length) return [];
+  const out = [];
+  for (let i = 0, reps = Math.ceil(target / uniq.length); i < reps; i++)
+    out.push(...uniq);
+  return out;
+}
+
+// Entry point other screens call before switching to the practice tab:
+//   primePractice({mode:'flash', focus:['Am','C']}) — drill just these
+//   primePractice({mode:'flash', deck:'weak'})    — weak-deck session
+//   primePractice({mode:'chg', pair:['C','G']})   — change drill on a pair
+// Only mutates `setup`; safe to call before initPractice ran (the repaint
+// is DOM-guarded). Prime first, THEN click the practice tab.
+export function primePractice(o = {}) {
+  if (o.mode === 'flash') {
+    setup.mode = 'flash';
+    if (Array.isArray(o.focus)) {
+      pendingFocus = o.focus.filter(sym => typeof sym === 'string' && parseSymbol(sym));
+      setup.deck = pendingFocus.length ? 'focus' : 'weak';
+    } else if (o.deck) {
+      pendingFocus = null;
+      setup.deck = o.deck;
+    }
+  } else if (o.mode === 'chg' && Array.isArray(o.pair) && o.pair.length === 2) {
+    const ca = parseSymbol(o.pair[0]), cb = parseSymbol(o.pair[1]);
+    // unparseable input or the same chord twice → nothing to prime
+    if (ca && cb && (ca.root !== cb.root || ca.quality !== cb.quality)) {
+      setup.mode = 'chg';
+      setup.chgA = { root: ca.root, quality: ca.quality, bass: null };
+      setup.chgB = { root: cb.root, quality: cb.quality, bass: null };
+      const id = chgPairId(chordSymbol(ca, { flat: preferFlat(ca.root) }),
+                           chordSymbol(cb, { flat: preferFlat(cb.root) }));
+      const weak = weakestChgPair();
+      const weakId = weak ? chgPairId(...weak.key.slice(4).split('|')) : null;
+      // preset/weak chips carry canonical pair ids — a pair outside them
+      // is shown as the 'custom' pick with the slots already filled
+      setup.chgPair =
+        (id === weakId || CHG_PAIRS.some(([a, b]) => chgPairId(a, b) === id))
+          ? id : 'custom';
+    }
+  }
+  // the setup card is rendered once at init — repaint if it exists
+  if (typeof document !== 'undefined' && $('practiceSetup')) renderSetup();
 }
 
 // ---------- session ----------
