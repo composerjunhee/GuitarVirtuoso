@@ -605,6 +605,8 @@ export async function runAll(report = console.log) {
     'typeOf: prog: prefix + legacy labels');
   ok(st.typeOf('chg:C|G') === 'change' && st.typeOf('chg:A|Bm') === 'change',
     'typeOf: chg: prefix');
+  ok(st.typeOf('rh:lv1') === 'rhythm' && st.typeOf('rh:lv3') === 'rhythm',
+    'typeOf: rh: prefix');
   ok(st.typeOf('E → G') === 'junk' && st.typeOf('A → B') === 'junk',
     'typeOf: highlow pair keys are junk');
   ok(st.typeOf('???') === 'other', 'typeOf: unknown → other');
@@ -933,6 +935,34 @@ export async function runAll(report = console.log) {
       'validator rejects non-bilingual name');
     ok(!strum.validPattern(null) && !strum.validPattern('DUDU'),
       'validator rejects non-objects');
+  }
+
+  // -- rhythm reading: the generated 16th-note grids (pure, seeded rng) --
+  report('rhythm reading');
+  {
+    const g = strum.genRhythm(1, mulberry32(7));
+    ok(g.length === 16 && g.every(x => typeof x === 'boolean'),
+      'genRhythm: 16 boolean slots');
+    ok(g[0] === true, 'genRhythm: slot 0 always an attack');
+    ok(g.every((x, i) => !x || i % 2 === 0), 'genRhythm Lv1: no odd-index attacks');
+    ok(strum.genRhythm(2, mulberry32(99)).join() ===
+       strum.genRhythm(2, mulberry32(99)).join(),
+      'genRhythm: deterministic with a seeded rng');
+    for (const [lv, lo, hi] of [[1, 4, 8], [2, 5, 11], [3, 6, 12]]) {
+      const inBounds = [...Array(80)].every((_, sd) => {
+        const n = strum.genRhythm(lv, mulberry32(sd * 37 + lv))
+          .filter(Boolean).length;
+        return n >= lo && n <= hi;
+      });
+      ok(inBounds, `genRhythm Lv${lv}: density within [${lo},${hi}] attacks`);
+    }
+    // Lv3 must always syncopate: an odd 'a'-slot attack (3|7|11) leading
+    // into a resting beat
+    const sync = [...Array(80)].every((_, sd) => {
+      const g3 = strum.genRhythm(3, mulberry32(sd * 13 + 5));
+      return [3, 7, 11].some(i => g3[i] && !g3[i + 1]);
+    });
+    ok(sync, 'genRhythm Lv3: guaranteed syncopation every bar');
   }
 
   report(`\n${pass} passed, ${fail} failed` +

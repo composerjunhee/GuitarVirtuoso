@@ -5,7 +5,8 @@
 //
 // Stat keys are typed at record time by prefix: 'note:C' (fretboard game),
 // 'iv:M3' (ear intervals), 'prog:I–V–vi–IV' (ear progressions), 'chg:C|G'
-// (chord-change drill — the unordered pair, one entry for both directions);
+// (chord-change drill — the unordered pair, one entry for both directions),
+// 'rh:lv1' (rhythm-reading drill — one attempt per generated bar);
 // bare keys are chord symbols. Legacy bare interval/progression labels are
 // classified by shape at render; the old highlow drill's junk "E → G" pair
 // keys are filtered out entirely (typeOf → 'junk').
@@ -37,6 +38,7 @@ const STR = {
     t_interval: '인터벌',
     t_prog: '진행',
     t_change: '전환',
+    t_rhythm: '리듬',
     t_note: '음',
     t_other: '기타',
     gWeak: '취약',
@@ -69,6 +71,7 @@ const STR = {
     t_interval: 'Intervals',
     t_prog: 'Progressions',
     t_change: 'Changes',
+    t_rhythm: 'Rhythm',
     t_note: 'Notes',
     t_other: 'Other',
     gWeak: 'Needs work',
@@ -119,6 +122,7 @@ export function typeOf(key) {
   if (key.startsWith('iv:')) return 'interval';
   if (key.startsWith('prog:')) return 'prog';
   if (key.startsWith('chg:')) return 'change';
+  if (key.startsWith('rh:')) return 'rhythm';
   if (key.includes(' → ')) return 'junk';
   if (IV_RE.test(key)) return 'interval';
   if (key.includes('–') || PROG_LABELS.has(key)) return 'prog';
@@ -237,7 +241,7 @@ function summaryCard(stats) {
 
 // per-item list: type filter seg, then collapsible mastery groups of
 // compact rows (tap a row to expand its hits/avg/reset subline)
-const TYPE_ORDER = ['chord', 'interval', 'prog', 'change', 'note', 'other'];
+const TYPE_ORDER = ['chord', 'interval', 'prog', 'change', 'rhythm', 'note', 'other'];
 
 function itemCard(stats) {
   const entries = statEntries(stats);

@@ -810,6 +810,102 @@ input:focus-visible, select:focus-visible {
 .strum-dot.hit { background: var(--good); }
 .strum-dot.miss { background: var(--bad); }
 
+/* ============ rhythm reading (#stRhRun, strum mode 3) ============
+   One .rh-cell per 16th-note slot, grouped four-per-beat in .rh-beat so
+   the .rh-beats number row lands column-for-column. .on = attack expected
+   (accent fill), .now = sweeping playhead (same pip language as
+   .beat-cell.now), .past dims finished slots, and .hit/.off/.miss carry
+   the verdict flash — green ≤100ms, accent 100–200ms, red unmatched.
+   .rh-next previews the next bar smaller + dimmer (the
+   .beat-strip.future convention). */
+.rh-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+.rh-grid[hidden] { display: none; }
+.rh-beat {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.rh-cell {
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--bg2);
+  transition: background .1s ease, border-color .1s ease, opacity .25s ease;
+}
+.rh-cell.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.rh-cell.now { background: var(--dim); border-color: var(--dim); }
+.rh-cell.on.now { background: var(--accent); border-color: var(--accent); }
+.rh-cell.past { opacity: .45; }
+/* verdicts — only ever applied to .on cells; declared after .on/.now so a
+   scored slot keeps its verdict color even under the playhead */
+.rh-cell.hit { background: var(--good); border-color: var(--good); }
+.rh-cell.off { background: var(--accent); border-color: var(--accent); }
+.rh-cell.miss { background: var(--bad); border-color: var(--bad); }
+.rh-cell.now.hit { background: var(--good); border-color: var(--good); }
+.rh-cell.now.off { background: var(--accent); border-color: var(--accent); }
+.rh-cell.now.miss { background: var(--bad); border-color: var(--bad); }
+.rh-beats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  text-align: center;
+}
+/* next-bar preview: smaller + dimmer, every cell future-tense */
+.rh-next {
+  transform: scale(.78);
+  transform-origin: center top;
+  opacity: .55;
+  margin-top: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rh-cell { transition: none; }
+}
+/* [hidden] loses to display:flex on these strum-mode rows — restate it so
+   the rhythm run can hide them */
+.chord-line[hidden], .strum-pat[hidden], .chord-diagram[hidden] { display: none; }
+
+/* tap pad — the rhythm drill's no-guitar input. One big forgiving target
+   (~120px) that flashes on each pointerdown. */
+.tap-pad {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  margin: 12px 0 4px;
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.tap-pad[hidden] { display: none; }
+.tap-pad:active { background: var(--accent); color: var(--accent-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .tap-pad.tap { animation: tap-pop .18s ease-out; }
+}
+@keyframes tap-pop {
+  0% { transform: scale(.97); }
+  100% { transform: scale(1); }
+}
+
 /* progression mode: the big chord title sits beside the beat strip — the
    change pip carries the next chord's symbol, so "what" and "when" read
    as one unit */

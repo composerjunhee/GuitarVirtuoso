@@ -66,6 +66,24 @@ const STR = {
     cancel: '취소',
     del: '삭제',
     patSaved: '패턴 저장됨',
+    modeRhythm: '리듬',
+    input: '입력',
+    inputMic: '마이크',
+    inputTap: '탭 패드',
+    level: '레벨',
+    rhHint: '레벨·입력·템포를 고르고 시작하세요. 카운트인 후 칸에 표시된 박자를 맞춰 연주합니다. Lv1은 8분음표, Lv2는 쉼표·엇박, Lv3은 16분·싱코페이션을 섞습니다.',
+    tapPad: '탭',
+    tapAlong: '표시된 박자에 맞춰 치세요',
+    rhHit: '정확',
+    rhLate: '늦음',
+    rhEarly: '빠름',
+    rhMiss: '미스',
+    rhExtra: '추가 타격',
+    rhHits: '히트',
+    rhAvg: '평균',
+    sumAcc: '정확도',
+    sumAvg: '평균 오차',
+    sumBest: '최고 연속 마디',
   },
   en: {
     pattern: 'Pattern',
@@ -106,6 +124,24 @@ const STR = {
     cancel: 'Cancel',
     del: 'Delete',
     patSaved: 'Pattern saved',
+    modeRhythm: 'Rhythm',
+    input: 'Input',
+    inputMic: 'Mic',
+    inputTap: 'Tap pad',
+    level: 'Level',
+    rhHint: 'Pick a level, input, and tempo. After the count-in, hit every marked slot on time. Lv1 is 8th notes, Lv2 adds rests/off-beats, Lv3 adds 16ths and syncopation.',
+    tapPad: 'TAP',
+    tapAlong: 'Play the marked beats on time',
+    rhHit: 'on time',
+    rhLate: 'late',
+    rhEarly: 'early',
+    rhMiss: 'miss',
+    rhExtra: 'extra tap',
+    rhHits: 'hits',
+    rhAvg: 'avg',
+    sumAcc: 'Accuracy',
+    sumAvg: 'Avg error',
+    sumBest: 'Best bar streak',
   },
 };
 
@@ -130,11 +166,60 @@ export const PATTERNS = [
 
 const COMMON_Q = ['', 'm', '7', 'maj7', 'm7', 'm7b5', 'sus2', 'sus4'];
 
+// ---------- rhythm reading (mode 'rhythm') ----------
+// A bar of 4/4 as 16 sixteenth-note slots: true = attack expected. The
+// generator is pure and rng-seeded so the selftest can pin the contract.
+//   Lv1: 8th-note grid only (even slots), slot 0 on, ~60% density
+//   Lv2: + the off-16ths can sound (25%) — rests and off-beat attacks
+//   Lv3: all 16 slots weighted (beats .7 / 8ths .45 / 16ths .3) plus a
+//        guaranteed syncopation: an odd 'a'-slot attack leading into a
+//        silent beat (slots 3|7|11 → rest on the next beat)
+export const RH_BARS = 8;              // fixed session length, bars are the rounds
+const RH_WIN = 200;                    // an attack matches an expected slot ±ms
+const RH_HIT = 100;                    // ≤ this offset is a clean hit
+
+export function genRhythm(level = 1, rng = Math.random) {
+  const g = new Array(16).fill(false);
+  g[0] = true;                          // downbeat always sounds
+  const fixed = new Set();              // syncopation anchor — clamp may not touch
+  if (level >= 3) {
+    const b = 4 * (1 + Math.floor(rng() * 3));   // anticipated beat: 2, 3 or 4
+    g[b - 1] = true; fixed.add(b - 1);           // attack on the 'a' before it
+    g[b] = false;    fixed.add(b);               // …and the beat itself rests
+  }
+  const p = i => level >= 3
+    ? (i % 4 === 0 ? 0.7 : i % 2 === 0 ? 0.45 : 0.3)
+    : (i % 2 === 0 ? 0.6 : 0.25);
+  for (let i = 1; i < 16; i++) {
+    if (fixed.has(i)) continue;
+    if (level === 1 && i % 2) continue;          // Lv1 stays on the 8th grid
+    g[i] = rng() < p(i);
+  }
+  // density bounds per level: Lv1 4–8, Lv2 5–11, Lv3 6–12. Fill/thin pick
+  // random eligible slots so a seeded rng stays deterministic.
+  const [lo, hi] = level >= 3 ? [6, 12] : level === 2 ? [5, 11] : [4, 8];
+  const n = () => g.reduce((a, x) => a + (x ? 1 : 0), 0);
+  const fillable = [];
+  for (let i = 1; i < 16; i++) {
+    if (g[i] || fixed.has(i) || (level === 1 && i % 2)) continue;
+    fillable.push(i);
+  }
+  while (n() < lo && fillable.length)
+    g[fillable.splice(Math.floor(rng() * fillable.length), 1)[0]] = true;
+  const thinnable = [];
+  for (let i = 1; i < 16; i++) if (g[i] && !fixed.has(i)) thinnable.push(i);
+  while (n() > hi && thinnable.length)
+    g[thinnable.splice(Math.floor(rng() * thinnable.length), 1)[0]] = false;
+  return g;
+}
+
 const setup = {
-  pattern: 'folk', mode: 'one',      // 'one' = repeat one chord; 'prog' = cycle a progression
+  pattern: 'folk', mode: 'one',      // 'one' | 'prog' | 'rhythm'
   root: 7, quality: '',              // one-chord mode target
   progKey: 0, prog: PROGRESSIONS[0].id,   // progression mode: key root + preset id
   bpm: 80, micCheck: false,
+  rhInput: 'tap',                    // 'tap' = tap pad, 'mic' = pick attacks
+  rhLevel: 1, rhBpm: 70,             // rhythm-drill options (bpm 40–120)
 };
 
 let body = null;                 // #strumBody
@@ -143,6 +228,8 @@ let session = null;              // see startSession() for fields
 let starting = false;            // guards the async mic.start() in startSession
 let metro = null;
 let slotEls = [];
+let rhCellEls = [];              // 16 .rh-cell elements for the current bar
+let rhCurSlot = -1;              // playhead position in rhCellEls
 let timers = new Set();          // pending visual-sync timeouts
 let pollTimer = null;
 let voteRing = [];               // sliding window of recent match results
@@ -235,14 +322,25 @@ function render() {
         <div class="chip-row"><span class="row-label" data-s="prog"></span>
           <select id="stProg" class="gt-select"></select></div>
       </div>
-      <div class="chip-row bpm-row"><span class="row-label">BPM</span>
+      <div id="stRhOpts" hidden>
+        <div class="chip-row"><span class="row-label" data-s="input"></span>
+          <span id="stRhInput" class="seg"></span></div>
+        <div class="chip-row"><span class="row-label" data-s="level"></span>
+          <span id="stRhLevel" class="seg"></span></div>
+        <div class="chip-row bpm-row"><span class="row-label">BPM</span>
+          <button id="stRhBpmDown" class="chip bpm-step" aria-label="BPM down">−</button>
+          <input id="stRhBpm" type="range" min="40" max="120" value="${setup.rhBpm}">
+          <button id="stRhBpmUp" class="chip bpm-step" aria-label="BPM up">+</button>
+          <span id="stRhBpmVal" class="mono">${setup.rhBpm}</span></div>
+      </div>
+      <div class="chip-row bpm-row" id="stBpmRowSetup"><span class="row-label">BPM</span>
         <button id="stBpmDown" class="chip bpm-step" aria-label="BPM down">−</button>
         <input id="stBpm" type="range" min="40" max="160" value="${setup.bpm}">
         <button id="stBpmUp" class="chip bpm-step" aria-label="BPM up">+</button>
         <span id="stBpmVal" class="mono">${setup.bpm}</span></div>
-      <div class="chip-row"><span class="row-label" data-s="mic"></span>
+      <div class="chip-row" id="stMicRow"><span class="row-label" data-s="mic"></span>
         <span id="stMic" class="seg"></span></div>
-      <p class="hint" data-s="hint"></p>
+      <p class="hint" id="stHint" data-s="hint"></p>
       <button id="stStart" class="primary big" data-s="start"></button>
     </div>
     <div id="stRun" class="setup-card" hidden>
@@ -254,7 +352,7 @@ function render() {
       </div>
       <div class="run-bar" aria-hidden="true"><i></i></div>
       <div class="run-body">
-        <div class="chord-line">
+        <div class="chord-line" id="stChordLine">
           <h2 id="stChord" class="chord-title"></h2>
           <span id="stMaps" class="beat-maps" hidden>
             <span id="stBeat" class="beat-strip" aria-hidden="true"></span>
@@ -263,10 +361,16 @@ function render() {
           </span>
         </div>
         <div id="stPatView" class="strum-pat"></div>
+        <div id="stRhRun" hidden>
+          <div class="rh-beats" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span></div>
+          <div id="stRhGrid" class="rh-grid" aria-hidden="true"></div>
+          <div id="stRhNext" class="rh-grid rh-next" aria-hidden="true"></div>
+          <button id="stRhPad" class="tap-pad" data-s="tapPad" hidden></button>
+        </div>
         <div id="stDiagram" class="chord-diagram"></div>
         <div id="stHist" class="strum-hist"></div>
         <div id="stFeedback" class="feedback"></div>
-        <div class="chip-row bpm-row" style="justify-content:center">
+        <div class="chip-row bpm-row" id="stBpmRow" style="justify-content:center">
           <span class="row-label">BPM</span>
           <button id="stBpmLiveDown" class="chip bpm-step" aria-label="BPM down">−</button>
           <input id="stBpmLive" type="range" min="40" max="160" value="${setup.bpm}" style="max-width:220px">
@@ -298,6 +402,15 @@ function setBpm(v) {
   metro?.setBpm(setup.bpm);
 }
 
+// the rhythm drill keeps its own tempo state (40–120, not the strum 40–160)
+// — a live bpm slider mid-run would desync the pre-generated grid, so the
+// run card hides the shared live row in rhythm mode
+function setRhBpm(v) {
+  setup.rhBpm = Math.min(120, Math.max(40, Math.round(v)));
+  q('stRhBpm').value = setup.rhBpm;
+  q('stRhBpmVal').textContent = setup.rhBpm;
+}
+
 function wire() {
   q('stStart').addEventListener('click', startSession);
   q('stEnd').addEventListener('click', endSession);
@@ -308,6 +421,19 @@ function wire() {
   q('stBpmUp').addEventListener('click', () => setBpm(setup.bpm + 1));
   q('stBpmLiveDown').addEventListener('click', () => setBpm(setup.bpm - 1));
   q('stBpmLiveUp').addEventListener('click', () => setBpm(setup.bpm + 1));
+  q('stRhBpm').addEventListener('input', () => setRhBpm(+q('stRhBpm').value));
+  q('stRhBpmDown').addEventListener('click', () => setRhBpm(setup.rhBpm - 1));
+  q('stRhBpmUp').addEventListener('click', () => setRhBpm(setup.rhBpm + 1));
+  // pointerdown (not click) — it's a timing instrument; each touch is one
+  // attack stamped on the same clock the mic's lastOnset uses
+  q('stRhPad').addEventListener('pointerdown', e => {
+    e.preventDefault();
+    rhAttack(performance.now());
+    const p = q('stRhPad');
+    p.classList.remove('tap');
+    void p.offsetWidth;                        // restart the pop animation
+    p.classList.add('tap');
+  });
   // same semantics as the old chip click: pick the progression; a
   // standard's canonical key adopts into the key picker on re-render.
   // wired here (once per render()) — renderSetupRows re-runs on the same
@@ -357,10 +483,20 @@ function renderSetupRows() {
   segRow(q('stMode'), [
     { id: 'one', label: s('modeOne') },
     { id: 'prog', label: s('modeProg') },
+    { id: 'rhythm', label: s('modeRhythm') },
   ], setup.mode, id => { setup.mode = id; renderSetupRows(); });
   const progMode = setup.mode === 'prog';
-  q('stOneOpts').hidden = progMode;
+  const rhMode = setup.mode === 'rhythm';
+  if (rhMode && patDraft) closePatEditor();
+  q('stPatRow').hidden = rhMode;
+  q('stOneOpts').hidden = progMode || rhMode;
   q('stProgOpts').hidden = !progMode;
+  q('stRhOpts').hidden = !rhMode;
+  // the shared BPM slider and mic-check row only serve the strum modes —
+  // rhythm carries its own tempo slider and input seg
+  q('stBpmRowSetup').hidden = rhMode;
+  q('stMicRow').hidden = rhMode;
+  q('stHint').textContent = s(rhMode ? 'rhHint' : 'hint');
 
   // self-previewing radio-cards: pattern name + a miniature glyph strip of
   // its slot string (D/U/· in compact .strum-slot form). Custom patterns
@@ -429,6 +565,17 @@ function renderSetupRows() {
   if (![...PROGRESSIONS, ...STANDARDS].some(p => p.id === setup.prog))
     setup.prog = PROGRESSIONS[0].id;
   fillProgSelect(q('stProgSearch').value);
+  // rhythm mode pickers: mic needs a guitar (muted strings work — only the
+  // attack timing is scored); the tap pad works anywhere, no mic at all
+  segRow(q('stRhInput'), [
+    { id: 'mic', label: s('inputMic') },
+    { id: 'tap', label: s('inputTap') },
+  ], setup.rhInput, id => { setup.rhInput = id; });
+  segRow(q('stRhLevel'), [
+    { id: '1', label: 'Lv1' },
+    { id: '2', label: 'Lv2' },
+    { id: '3', label: 'Lv3' },
+  ], String(setup.rhLevel), id => { setup.rhLevel = +id; });
   segRow(q('stMic'), [
     { id: 'off', label: s('micOff') },
     { id: 'on', label: s('micOn') },
@@ -600,6 +747,7 @@ async function startSession() {
   q('stStart').disabled = true;
   try {
     audioCtx();                  // create/resume inside the click gesture
+    if (setup.mode === 'rhythm') { await startRhythm(); return; }
     if (setup.micCheck) {
       try { await mic.start(); }
       catch (e) {
@@ -806,15 +954,31 @@ function closeBar() {
 
 function paintRun() {
   hideCountin();                 // first beat re-shows it within ~25ms
-  paintBar();
-  q('stBpmLive').value = setup.bpm;
-  q('stBpmLiveVal').textContent = setup.bpm;
-  buildPattern();
+  const rh = !!session.rhythm;
+  // rhythm swaps the chord/pattern/diagram row for the 16-slot grid; the
+  // live BPM row hides because tempo is baked into the generated session
+  q('stChordLine').hidden = rh;
+  q('stPatView').hidden = rh;
+  q('stDiagram').hidden = rh;
+  q('stBpmRow').hidden = rh;
+  q('stRhRun').hidden = !rh;
+  if (rh) {
+    q('stRhPad').hidden = session.input !== 'tap';
+    buildRhGrid();
+    paintRhNext();
+  } else {
+    paintBar();
+    q('stBpmLive').value = setup.bpm;
+    q('stBpmLiveVal').textContent = setup.bpm;
+    buildPattern();
+    highlight(-1);
+  }
   paintHist();
   paintScore();
-  highlight(-1);
   const fb = q('stFeedback');
-  fb.textContent = session.micOn ? s('listening') : s('strumAlong');
+  fb.textContent = rh
+    ? (session.input === 'mic' ? s('listening') : s('tapAlong'))
+    : session.micOn ? s('listening') : s('strumAlong');
   fb.className = 'feedback';
 }
 
@@ -919,6 +1083,19 @@ function highlight(i) {
 
 function paintScore() {
   const se = session;
+  if (se.rhythm) {
+    const cur = se.countin || se.bar < 0 ? 0 : Math.min(RH_BARS, se.bar + 1);
+    q('stBars').textContent = `${s('bars')} ${cur}/${RH_BARS}`;
+    const avg = se.offsets.length
+      ? Math.round(se.offsets.reduce((a, x) => a + Math.abs(x), 0) / se.offsets.length)
+      : 0;
+    q('stScore').textContent =
+      `${s('rhHits')} ${se.hits}/${se.expTotal} · ${s('rhAvg')} ±${avg}ms`;
+    // fixed 8-bar session — the run bar carries real progress this time
+    const bar = q('stRun')?.querySelector('.run-bar > i');
+    if (bar) bar.style.width = `${cur / RH_BARS * 100}%`;
+    return;
+  }
   q('stBars').textContent = `${s('bars')} ${se.bars}`;
   q('stScore').textContent = se.micOn ? `✓${se.hits} ✗${se.bars - se.hits}` : '';
   // bars are unbounded, so the bar carries accuracy instead of progress
@@ -973,6 +1150,242 @@ function startPoll() {
 
 function stopPoll() { clearInterval(pollTimer); pollTimer = null; }
 
+// ---------- rhythm-reading run ----------
+// Same audio-clock machinery as the strum modes: the Metronome's first bar
+// counts in, then RH_BARS generated bars of 4 beats each. Attacks come from
+// the tap pad (pointerdown → performance.now) or mic.lastOnset — no pitch
+// checking, muted strings are fine. Each attack is matched to the nearest
+// still-open expected slot inside ±RH_WIN ms.
+
+async function startRhythm() {
+  if (setup.rhInput === 'mic') {
+    try { await mic.start(); }
+    catch (e) {
+      showBanner(e && e.name === 'NotAllowedError' ? s('micDenied') : s('micFailed'));
+      return;
+    }
+    // user may have left the tab while getUserMedia was pending
+    if (!document.getElementById('screen-strum').classList.contains('active')) {
+      mic.stop(); return;
+    }
+  }
+  session = {
+    rhythm: true, done: false, countin: true,
+    level: setup.rhLevel, input: setup.rhInput,
+    pats: [...Array(RH_BARS)].map(() => genRhythm(setup.rhLevel)),
+    bar: -1, bars: 0,              // bar = current index; bars = completed
+    pat: null, slotState: [],      // 'rest' | 'pending' | 'hit' | 'off' | 'miss'
+    barT0: 0, slotMs: 15000 / setup.rhBpm,
+    lastOnsetSeen: mic.lastOnset,  // onsets before Start don't count
+    hits: 0, expTotal: 0, gotTotal: 0, expDone: 0,
+    // expTotal counts expected slots in started bars (live score line);
+    // expDone only completed ones (result accuracy — an End mid-bar
+    // shouldn't score slots the player never had a chance to hit)
+    offsets: [], barOffsets: [], extra: 0,
+    hist: [], streak: 0, best: 0,
+  };
+  voteRing = [];
+  showPanel('run');
+  paintRun();
+  metro = new Metronome(rhBeat);
+  metro.start(setup.rhBpm, 4);
+  startRhTick();
+}
+
+// Metronome callback — the strum modes' count-in convention: beats 0–3
+// flash the overlay unscored, session beat 0 opens bar 0 on the next bar
+// line, and the bar line after bar 7 (session beat 32) ends the session.
+function rhBeat(beatIndex, audioTime) {
+  if (!session || session.done) return;
+  const delay = Math.max(0, (audioTime - audioCtx().currentTime) * 1000);
+  if (beatIndex < 4) { later(() => showCountin(4 - beatIndex), delay); return; }
+  const sb = beatIndex - 4;
+  if (sb % 4 === 0) {
+    const bar = sb / 4;
+    later(() => { bar < RH_BARS ? rhBarStart(bar) : rhFinish(); }, delay);
+  }
+}
+
+function rhBarStart(bar) {
+  const se = session;
+  if (!se || se.done) return;
+  if (bar > 0) rhBarClose();           // tally the bar that just ended
+  se.countin = false;
+  hideCountin();
+  se.bar = bar;
+  se.pat = se.pats[bar];
+  se.slotState = se.pat.map(on => (on ? 'pending' : 'rest'));
+  se.barT0 = performance.now();
+  se.slotMs = 15000 / (metro?.bpm || setup.rhBpm);
+  se.barOffsets = [];
+  se.extra = 0;
+  se.expTotal += se.pat.filter(Boolean).length;
+  buildRhGrid();
+  paintRhNext();
+  paintScore();
+  const fb = q('stFeedback');
+  fb.textContent = se.input === 'mic' ? s('listening') : s('tapAlong');
+  fb.className = 'feedback';
+}
+
+// The bar line: still-pending slots miss, extra taps count against the bar
+// (capped at its expected count, so spam can't bury an honest bar).
+function rhBarClose() {
+  const se = session;
+  let exp = 0, got = 0;
+  se.slotState.forEach((st, i) => {
+    if (st === 'rest') return;
+    exp++;
+    if (st === 'pending') { se.slotState[i] = 'miss'; paintRhCell(i); }
+    else got++;                        // 'hit' or 'off' — both matched
+  });
+  const acc = exp ? got / (exp + Math.min(se.extra, exp)) : 1;
+  const ok = acc >= 0.7;
+  se.bars++;
+  se.gotTotal += got;
+  se.expDone += exp;
+  se.hist.push(ok);
+  if (se.hist.length > 16) se.hist.shift();
+  if (ok) { se.streak++; se.best = Math.max(se.best, se.streak); }
+  else se.streak = 0;
+  // one stat attempt per bar under 'rh:lvN'; ms = this bar's mean |offset|
+  const avg = se.barOffsets.length
+    ? se.barOffsets.reduce((a, x) => a + Math.abs(x), 0) / se.barOffsets.length
+    : 0;
+  recordAttempt(`rh:lv${se.level}`, ok, avg);
+  paintHist();
+  paintScore();
+  const fb = q('stFeedback');
+  fb.textContent = ok ? s('clean') : s('timing');
+  fb.className = 'feedback ' + (ok ? 'good' : 'bad');
+}
+
+// One attack (tap or mic onset) → the nearest still-open expected slot
+// inside ±RH_WIN. 'hit' ≤RH_HIT ms, 'off' within the window; anything
+// unmatched is an extra for the bar. Note: the worklet's 300ms onset
+// refractory means mic input physically can't resolve 16ths above ~100bpm
+// — tap input (or sparser levels) is the way to play fast grids.
+function rhAttack(t) {
+  const se = session;
+  if (!se || se.done || se.countin || se.bar < 0 || !se.pat) return;
+  let best = -1, bd = RH_WIN;
+  for (let i = 0; i < 16; i++) {
+    if (se.slotState[i] !== 'pending') continue;
+    const d = Math.abs(t - (se.barT0 + i * se.slotMs));
+    if (d <= bd) { bd = d; best = i; }
+  }
+  const fb = q('stFeedback');
+  if (best < 0) {
+    se.extra++;
+    fb.textContent = s('rhExtra');
+    fb.className = 'feedback bad';
+    return;
+  }
+  const off = t - (se.barT0 + best * se.slotMs);
+  se.slotState[best] = Math.abs(off) <= RH_HIT ? 'hit' : 'off';
+  se.offsets.push(off);
+  se.barOffsets.push(off);
+  if (se.slotState[best] === 'hit') se.hits++;
+  paintRhCell(best);
+  fb.textContent = se.slotState[best] === 'hit'
+    ? `✓ ${off >= 0 ? '+' : '−'}${Math.round(Math.abs(off))}ms`
+    : `${off > 0 ? s('rhLate') : s('rhEarly')} ${Math.round(Math.abs(off))}ms`;
+  fb.className = 'feedback ' + (se.slotState[best] === 'hit' ? 'good' : 'bad');
+  paintScore();
+}
+
+// ~30 Hz tick (reuses pollTimer so cleanupAudio covers it): drains mic
+// onsets, sweeps the playhead, and expires pending slots whose window
+// closed — a live miss flash instead of waiting for the bar line.
+function startRhTick() {
+  stopPoll();
+  pollTimer = setInterval(() => {
+    const se = session;
+    if (!se || se.done || !se.rhythm) return;
+    if (se.input === 'mic' && mic.lastOnset &&
+        mic.lastOnset !== se.lastOnsetSeen) {
+      se.lastOnsetSeen = mic.lastOnset;
+      rhAttack(mic.lastOnset);
+    }
+    if (se.countin || se.bar < 0 || !se.pat) return;
+    const now = performance.now();
+    const cur = Math.max(0, Math.min(15, Math.floor((now - se.barT0) / se.slotMs)));
+    rhPlayhead(cur);
+    for (let i = 0; i < 16; i++) {
+      if (se.slotState[i] === 'pending' &&
+          now - (se.barT0 + i * se.slotMs) > RH_WIN) {
+        se.slotState[i] = 'miss';
+        paintRhCell(i);
+      }
+    }
+  }, 33);
+}
+
+// the sweeping highlight: .now on the current slot, .past dims finished ones
+function rhPlayhead(cur) {
+  if (cur === rhCurSlot) return;
+  rhCurSlot = cur;
+  rhCellEls.forEach((c, i) => {
+    c.classList.toggle('now', i === cur);
+    c.classList.toggle('past', i < cur);
+  });
+}
+
+// The 16-slot grid: four .rh-beat groups of four cells, so the beat-number
+// row above lands column-for-column. During the count-in (pat still null)
+// bar 0's pattern previews under the overlay.
+function buildRhGrid() {
+  const grid = q('stRhGrid');
+  const pat = session.pat || session.pats[0];
+  grid.replaceChildren();
+  rhCellEls = [];
+  rhCurSlot = -1;
+  pat.forEach((on, i) => {
+    if (i % 4 === 0) grid.append(el('span', 'rh-beat'));
+    const c = document.createElement('i');
+    c.className = 'rh-cell' + (on ? ' on' : '');
+    grid.lastElementChild.append(c);
+    rhCellEls.push(c);
+    paintRhCell(i);
+  });
+}
+
+// next-bar preview: same grid, smaller + dimmer (.beat-strip.future look)
+function paintRhNext() {
+  const nx = q('stRhNext');
+  nx.replaceChildren();
+  const np = session.pats[Math.max(0, session.bar) + 1];
+  nx.hidden = !np;
+  if (!np) return;
+  np.forEach((on, i) => {
+    if (i % 4 === 0) nx.append(el('span', 'rh-beat'));
+    const c = document.createElement('i');
+    c.className = 'rh-cell' + (on ? ' on' : '');
+    nx.lastElementChild.append(c);
+  });
+}
+
+function paintRhCell(i) {
+  const c = rhCellEls[i];
+  if (!c) return;
+  const st = session.slotState[i] || 'rest';
+  c.classList.toggle('hit', st === 'hit');
+  c.classList.toggle('off', st === 'off');
+  c.classList.toggle('miss', st === 'miss');
+}
+
+// natural finish — the metronome hit the bar line after bar 7
+function rhFinish() {
+  const se = session;
+  if (!se || se.done) return;
+  rhBarClose();
+  se.done = true;
+  cleanupAudio();
+  hideCountin();
+  showPanel('result');
+  paintResult();
+}
+
 // ---------- finish ----------
 
 function cleanupAudio() {
@@ -995,6 +1408,19 @@ function endSession() {          // "끝내기" — stop the clock, show light s
 
 // split out so render() can repaint it after a language switch
 function paintResult() {
+  if (session.rhythm) {
+    const se = session;
+    const acc = se.expDone ? Math.round(100 * se.gotTotal / se.expDone) : 0;
+    const avg = se.offsets.length
+      ? Math.round(se.offsets.reduce((a, x) => a + Math.abs(x), 0) / se.offsets.length)
+      : 0;
+    q('stResultBody').innerHTML =
+      `${s('modeRhythm')} Lv${se.level} · ${s('bars')}: ${se.bars}<br>` +
+      `${s('sumAcc')}: ${acc}% (${se.gotTotal}/${se.expDone})<br>` +
+      `${s('sumAvg')}: ±${avg}ms<br>` +
+      `${s('sumBest')}: ${se.best}`;
+    return;
+  }
   const acc = session.micOn
     ? Math.round(100 * session.hits / session.bars) : null;
   q('stResultBody').innerHTML =
