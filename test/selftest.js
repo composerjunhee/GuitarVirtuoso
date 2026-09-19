@@ -603,9 +603,24 @@ export async function runAll(report = console.log) {
   ok(st.typeOf('prog:I–V–vi–IV') === 'prog' &&
     st.typeOf('I–V–vi–IV') === 'prog' && st.typeOf('12-bar blues') === 'prog',
     'typeOf: prog: prefix + legacy labels');
+  ok(st.typeOf('chg:C|G') === 'change' && st.typeOf('chg:A|Bm') === 'change',
+    'typeOf: chg: prefix');
   ok(st.typeOf('E → G') === 'junk' && st.typeOf('A → B') === 'junk',
     'typeOf: highlow pair keys are junk');
   ok(st.typeOf('???') === 'other', 'typeOf: unknown → other');
+
+  // -- chord-change drill: pure helpers (no DOM/mic needed) --
+  report('chord change drill');
+  const pr = await import('../js/screens/practice.js');
+  ok(pr.chgKey('C', 'G') === 'chg:C|G' && pr.chgKey('G', 'C') === pr.chgKey('C', 'G'),
+    'chgKey: unordered canonical pair key');
+  ok(pr.chgKey('Em', 'Am') === 'chg:Am|Em' && pr.chgKey('D', 'A') === 'chg:A|D',
+    'chgKey: symbols sorted');
+  ok(Array.isArray(pr.CHG_PAIRS) && pr.CHG_PAIRS.length >= 8 &&
+    pr.CHG_PAIRS.every(([a, b]) => parseSymbol(a) && parseSymbol(b) && a !== b),
+    'CHG_PAIRS: every preset parses, no self-pairs');
+  ok(pr.CHG_PAIRS.every(([a, b]) => st.typeOf(pr.chgKey(a, b)) === 'change'),
+    'every preset key classifies as change');
 
   // -- song mode: chart bar layout (pure helper, no DOM needed) --
   report('song mode');

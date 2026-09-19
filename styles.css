@@ -916,6 +916,61 @@ input:focus-visible, select:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .beat-cell { transition: none; }
 }
+
+/* ============ chord-change drill (#chgRun, inside #practiceRun) ============
+   Two named mini diagrams side by side; .cur lights the sounding chord's
+   slot. The 4-pip .chg-beats row fills across the bar — same pip language
+   as .beat-cell.now. */
+#chgRun { margin: 0 0 8px; }
+#chgRun[hidden] { display: none; }
+.chg-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.chg-arrow { color: var(--dim); font-size: 22px; flex: none; }
+.chg-slot {
+  flex: 1;
+  max-width: 170px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 6px;
+  background: var(--bg2);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.chg-slot.cur {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow);
+}
+.chg-name {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--dim);
+  margin-bottom: 4px;
+}
+.chg-slot.cur .chg-name { color: var(--accent); }
+.chg-diag svg { max-width: 120px; padding: 4px; }
+.chg-beats {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+.chg-beats i {
+  width: 14px;
+  height: 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: var(--bg2);
+  transition: background .12s ease, border-color .12s ease;
+}
+.chg-beats i.now { background: var(--accent); border-color: var(--accent); }
+@media (prefers-reduced-motion: reduce) {
+  .chg-beats i, .chg-slot { transition: none; }
+}
+
 /* ============ ear training extras (#earBody) ============ */
 /* ear.js styles #earResultBody inline today; these hooks let the markup
    drop the inline style later (same look as #resultBody). */

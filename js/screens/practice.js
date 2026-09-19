@@ -2,7 +2,7 @@
 // Input is either the real guitar (mic → chord verification) or the virtual
 // fretboard (tap a shape → check). Stats persist in localStorage.
 
-import { parseSymbol, chordSymbol, requiredPcs, bassPc } from '../theory/chords.js';
+import { parseSymbol, chordSymbol, requiredPcs, bassPc, QUALITIES } from '../theory/chords.js';
 import { pcName, midiToPc, STRINGS, preferFlat } from '../theory/notes.js';
 import { voicingsFor, voiceLead } from '../theory/voicings.js';
 import { renderChordDiagram } from '../ui/chordDiagram.js';
@@ -19,7 +19,11 @@ import { initProgBuilder, getCustomProgressions } from './progBuilder.js';
 import { t, getLang, onLangChange } from '../i18n.js';
 import { settings, loadStats, recordAttempt, loadDeck } from '../state.js';
 
-const setup = { mode: 'flash', input: 'mic', deck: 'starter8', prog: 'I-IV-V', key: 0, bpm: 72 };
+const setup = {
+  mode: 'flash', input: 'mic', deck: 'starter8', prog: 'I-IV-V', key: 0, bpm: 72,
+  chgPair: 'C|G', chgA: { root: 0, quality: '', bass: null },
+  chgB: { root: 7, quality: '', bass: null }, chgBpm: 60, chgAuto: true,
+};
 let session = null;
 let metro = null;
 let vboard = null;
@@ -30,6 +34,7 @@ let seenOnset = 0;             // last onset timestamp the vote consumed
 let timers = new Set();        // pending metronome-sync timeouts
 let ciEl = null;               // .countin overlay inside #practiceRun
 let nbEl = null;               // #nextBeat row (built lazily — index.html untouched)
+let chgEl = null;              // #chgRun pair panel (built lazily, like nbEl)
 
 // defer a visual to an audio-clock time, tracked for cleanup (strum.js
 // uses the same pattern — onBeat fires ~120ms early on the audio clock)
@@ -42,6 +47,54 @@ const $ = id => document.getElementById(id);
 
 function opts() { return { flat: settings.flat, lang: getLang() }; }
 
+// ---------- chord-change drill ----------
+// Module-local strings (delegated-module convention — i18n.js is shared).
+const STR = {
+  ko: {
+    mode: '전환', pair: '페어', custom: '직접', weak: '취약',
+    auto: '자동 템포+', changes: '전환', streak: '연속',
+    tempoUp: b => `템포 업! ${b}bpm`,
+    sameChord: '같은 코드끼리는 전환할 수 없습니다.',
+    sumChanges: '총 전환', sumStreak: '최고 연속', sumBpm: '최고 템포',
+  },
+  en: {
+    mode: 'Changes', pair: 'Pair', custom: 'custom', weak: 'weak',
+    auto: 'auto tempo+', changes: 'changes', streak: 'streak',
+    tempoUp: b => `Tempo up! ${b}bpm`,
+    sameChord: 'Pick two different chords.',
+    sumChanges: 'Total changes', sumStreak: 'Best streak', sumBpm: 'Top tempo',
+  },
+};
+const cs = k => STR[getLang()]?.[k] ?? STR.en[k] ?? k;
+
+// canonical beginner switches — the preset pair chips in the chg setup
+export const CHG_PAIRS = [
+  ['C', 'G'], ['C', 'Am'], ['G', 'D'], ['D', 'A'],
+  ['Em', 'Am'], ['G', 'Em'], ['C', 'F'], ['A', 'E'],
+];
+// the slot picker's quality subset, like the song editor's select
+const CHG_QUALITIES = ['', 'm', '7', 'm7', 'maj7', 'sus4', 'sus2', '6', 'add9'];
+
+// A pair is unordered: one Leitner entry covers A→B and B→A. Symbols are
+// already canonical when they reach here (chordSymbol + preferFlat at
+// session start), so 'F#' and 'Gb' can't fork the stats.
+export function chgKey(symA, symB) {
+  return 'chg:' + [symA, symB].sort().join('|');
+}
+const chgPairId = (a, b) => [a, b].sort().join('|');
+
+// weakest recorded pair (≥3 attempts) → the "취약: A↔B" setup chip
+function weakestChgPair() {
+  const s = loadStats();
+  let weak = null;
+  for (const [key, e] of Object.entries(s)) {
+    if (!key.startsWith('chg:') || !e || e.att < 3) continue;
+    const acc = e.ok / e.att;
+    if (!weak || acc < weak.acc) weak = { key, acc };
+  }
+  return weak;
+}
+
 // ---------- setup UI ----------
 
 function renderSetup() {
@@ -53,6 +106,11 @@ function renderSetup() {
     b.classList.toggle('sel', b.dataset.deck === setup.deck));
   $('flashOpts').hidden = setup.mode !== 'flash';
   $('progOpts').hidden = setup.mode !== 'prog';
+  $('chgOpts').hidden = setup.mode !== 'chg';
+  $('inputRow').hidden = setup.mode === 'chg';   // changes are mic-only
+  $('chgModeBtn').textContent = cs('mode');
+  $('chgPairLabel').textContent = cs('pair');
+  paintChgSetup();
 
   // a custom progression may have been deleted while selected — fall back
   const customs = getCustomProgressions();
@@ -61,6 +119,75 @@ function renderSetup() {
   fillProgSelect($('progSearch').value, customs);
   $('progSearch').placeholder = t('pr.search');
   rootPicker($('keyChips'), setup.key, id => { setup.key = id; }, opts());
+}
+
+// ---------- chg setup UI ----------
+
+// Preset chips + the weakest-pair suggestion + 'custom'. Chips carry the
+// canonical (sorted) pair id so a weak pair that duplicates a preset just
+// merges into it instead of showing twice.
+function paintChgSetup() {
+  const wrap = $('chgPairs');
+  wrap.replaceChildren();
+  const seen = new Set();
+  const mk = (id, label, pair) => {
+    if (seen.has(id)) return;
+    seen.add(id);
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.textContent = label;
+    b.dataset.pid = id;
+    b.addEventListener('click', () => {
+      setup.chgPair = id;
+      if (pair) {
+        setup.chgA = parseSymbol(pair[0]);
+        setup.chgB = parseSymbol(pair[1]);
+      }
+      renderSetup();
+    });
+    wrap.append(b);
+  };
+  for (const [a, b] of CHG_PAIRS) mk(chgPairId(a, b), `${a}↔${b}`, [a, b]);
+  const weak = weakestChgPair();
+  if (weak) {
+    const [a, b] = weak.key.slice(4).split('|');
+    mk(chgPairId(a, b), `${cs('weak')}: ${a}↔${b}`, [a, b]);
+  }
+  mk('custom', cs('custom'), null);
+  // a stats reset may have orphaned the remembered pick — fall back
+  if (!seen.has(setup.chgPair)) {
+    setup.chgPair = chgPairId(...CHG_PAIRS[0]);
+    setup.chgA = parseSymbol(CHG_PAIRS[0][0]);
+    setup.chgB = parseSymbol(CHG_PAIRS[0][1]);
+  }
+  [...wrap.children].forEach(c =>
+    c.classList.toggle('sel', c.dataset.pid === setup.chgPair));
+  $('chgCustom').hidden = setup.chgPair !== 'custom';
+  paintChgSlot('A');
+  paintChgSlot('B');
+  $('chgAuto').classList.toggle('sel', setup.chgAuto);
+  $('chgAuto').textContent = cs('auto');
+}
+
+function paintChgSlot(slot) {
+  const chord = slot === 'A' ? setup.chgA : setup.chgB;
+  $('chgSlot' + slot).textContent =
+    `${slot}: ${chordSymbol(chord, { flat: settings.flat })}`;
+}
+
+// one slot picker open at a time — the song editor's rootPicker + quality
+// <select> pattern, shrunk to the chg subset
+function openChgPick(slot) {
+  const panel = $('chgPick' + slot);
+  const show = panel.hidden;
+  $('chgPickA').hidden = true;
+  $('chgPickB').hidden = true;
+  if (!show) return;
+  const chord = slot === 'A' ? setup.chgA : setup.chgB;
+  rootPicker($('chgRoots' + slot), chord.root,
+    pc => { chord.root = pc; paintChgSlot(slot); }, opts());
+  $('chgQual' + slot).value = chord.quality;
+  panel.hidden = false;
 }
 
 // ---------- song search ----------
@@ -124,6 +251,7 @@ function resolveDeck() {
 // ---------- session ----------
 
 async function startSession() {
+  if (setup.mode === 'chg') return startChg();
   let items;   // [{sym, chord, scored}]
   if (setup.mode === 'flash') {
     const symbols = resolveDeck();
@@ -172,6 +300,9 @@ async function startSession() {
   $('practiceSetup').hidden = true;
   $('practiceResult').hidden = true;
   $('practiceRun').hidden = false;
+  $('runDiagram').hidden = false;      // chg mode hides these — restore
+  $('skipChord').hidden = false;
+  if (chgEl) chgEl.hidden = true;
   hideCountin();
   showTarget();
   startPoll();
@@ -403,6 +534,222 @@ function onSkip() {
   advanceTarget();
 }
 
+// ---------- chord-change run ----------
+
+// Pair panel inside #practiceRun: two named mini diagrams with the
+// sounding chord lit (.cur) and a 4-pip beat row under them. Built lazily
+// like nbEl; the single-target #runDiagram is hidden while it shows.
+function ensureChgRun() {
+  if (!chgEl) {
+    chgEl = document.createElement('div');
+    chgEl.id = 'chgRun';
+    const pair = document.createElement('div');
+    pair.className = 'chg-pair';
+    chgEl._slots = [];
+    for (let i = 0; i < 2; i++) {
+      if (i === 1) {
+        const ar = document.createElement('span');
+        ar.className = 'chg-arrow';
+        ar.textContent = '⇄';
+        ar.setAttribute('aria-hidden', 'true');
+        pair.append(ar);
+      }
+      const slot = document.createElement('div');
+      slot.className = 'chg-slot';
+      const nm = document.createElement('div');
+      nm.className = 'chg-name';
+      const dg = document.createElement('div');
+      dg.className = 'chg-diag chord-diagram';
+      slot.append(nm, dg);
+      pair.append(slot);
+      chgEl._slots.push({ slot, nm, dg });
+    }
+    const beats = document.createElement('div');
+    beats.className = 'chg-beats';
+    beats.setAttribute('aria-hidden', 'true');
+    for (let i = 0; i < 4; i++) beats.append(document.createElement('i'));
+    chgEl._beats = beats;
+    chgEl.append(pair, beats);
+    $('runDiagram').before(chgEl);
+  }
+  chgEl.hidden = false;
+}
+
+// One bar = one chord; A | B | A | B … Each bar is a scored change attempt
+// under the unordered chg: key — bar 0 counts too (it's the landing that
+// matters, not where the hand started). The mic vote is exactly the prog
+// drill's: same spectrum → profile → matchChord → ≥4-of-6 ring inside the
+// 1.8 s onset-fresh window; only the pass action differs.
+async function startChg() {
+  const chA = setup.chgA, chB = setup.chgB;
+  const symA = chordSymbol(chA, { flat: preferFlat(chA.root) });
+  const symB = chordSymbol(chB, { flat: preferFlat(chB.root) });
+  if (symA === symB) { showBanner(cs('sameChord'), 4000, 'info'); return; }
+  try { await mic.start(); }
+  catch (e) {
+    showBanner(e && e.name === 'NotAllowedError' ? t('mic.denied') : t('mic.failed'));
+    return;
+  }
+  const items = [chA, chB].map((chord, i) => ({
+    sym: i ? symB : symA, chord, scored: false, beats: 4 }));
+  // voice-lead the pair once — the shown shape doubles as the mic template
+  const led = voiceLead(items.map(it => it.chord));
+  items.forEach((it, i) => { it.voicing = led[i] ?? voicingsFor(it.chord)[0] ?? null; });
+  session = {
+    items, idx: 0, results: [], t0: 0, done: false,
+    chgMode: true, timed: false,          // own bar machinery — not prog's
+    advancing: false, countin: true, nextAt: 0, sb: -1,
+    chg: {
+      key: chgKey(symA, symB),
+      bpm: setup.chgBpm, topBpm: setup.chgBpm, auto: setup.chgAuto,
+      streak: 0, best: 0, changes: 0, oks: 0,
+      bar: -1, barScored: true, lastOk: null,
+    },
+  };
+  $('practiceSetup').hidden = true;
+  $('practiceResult').hidden = true;
+  $('practiceRun').hidden = false;
+  $('runDiagram').hidden = true;
+  $('skipChord').hidden = true;
+  $('virtualBoard').hidden = true;
+  $('submitVirtual').hidden = true;
+  if (nbEl) nbEl.hidden = true;
+  const rb = document.querySelector('#practiceRun .run-bar > i');
+  if (rb) rb.style.width = '0%';
+  hideCountin();
+  ensureChgRun();
+  chgEl._slots.forEach((o, i) => {        // fixed for the whole run
+    o.dg.replaceChildren();
+    if (items[i].voicing)
+      renderChordDiagram(o.dg, items[i].voicing, { lefty: settings.lefty });
+  });
+  $('runProgress').textContent = `${symA}⇄${symB}`;
+  paintChgScore();
+  paintChg();
+  startPoll();
+  // same audio-clock scheduling as the timed prog drill: the first bar is
+  // a 4-beat count-in (unscored), then every 4th session beat is a bar line
+  metro = new Metronome((beat, atTime) => {
+    const delay = Math.max(0, (atTime - audioCtx().currentTime) * 1000);
+    if (beat < 4) { later(() => showCountin(4 - beat), delay); return; }
+    const sb = beat - 4;
+    later(() => {
+      if (!session || session.done) return;
+      session.sb = sb;
+      chgBeatNow(sb % 4);
+    }, delay);
+    if (sb === 0) {
+      later(() => {
+        if (!session || session.done) return;
+        session.countin = false;
+        hideCountin();
+        chgBarStart(0);
+      }, delay);
+    } else if (sb % 4 === 0) {
+      later(() => chgBarStart(sb / 4), delay);
+    }
+  });
+  metro.start(setup.chgBpm, 4);
+}
+
+// bar line: the outgoing bar misses if it never landed, then the target
+// flips and a fresh vote window opens
+function chgBarStart(bar) {
+  if (!session || session.done) return;
+  const c = session.chg;
+  if (c.bar >= 0 && !c.barScored) chgScore(false);
+  c.bar = bar;
+  c.barScored = false;
+  session.idx = bar % 2;
+  session.t0 = performance.now();
+  voteRing = [];
+  paintChg();
+}
+
+// one attempt — an early in-bar detect (ok) or the bar-line miss. Records
+// under the unordered pair key only; the chords stay out of chord mastery.
+function chgScore(ok) {
+  if (!session || session.done) return;
+  const c = session.chg;
+  if (c.barScored) return;
+  c.barScored = true;
+  c.changes++;
+  const dt = ok ? performance.now() - session.t0 : 0;
+  if (ok) { c.oks++; c.streak++; c.best = Math.max(c.best, c.streak); }
+  else c.streak = 0;
+  session.results.push({ sym: session.items[session.idx].sym, correct: ok, dt });
+  recordAttempt(c.key, ok, dt);
+  c.lastOk = ok;
+  if (ok && c.auto && c.streak % 8 === 0 && c.bpm < 140) {
+    c.bpm += 5;
+    c.topBpm = Math.max(c.topBpm, c.bpm);
+    metro?.setBpm(c.bpm);
+    showBanner(cs('tempoUp')(c.bpm), 2500);
+  }
+  paintChgFeedback();
+  paintChgScore();
+}
+
+function paintChg() {
+  chgEl._slots.forEach((o, i) => {
+    o.nm.textContent = session.items[i].sym;
+    o.slot.classList.toggle('cur', i === session.idx);
+  });
+  $('targetChord').textContent = session.items[session.idx].sym;
+  $('runHeard').replaceChildren();
+  paintChgFeedback();
+}
+
+// the last change's verdict stays up through the next bar
+function paintChgFeedback() {
+  const fb = $('runFeedback');
+  const lastOk = session.chg.lastOk;
+  if (lastOk == null) {
+    fb.textContent = t('pr.listening');
+    fb.className = 'feedback';
+  } else {
+    fb.textContent = lastOk ? '✓' : '✕';
+    fb.className = 'feedback ' + (lastOk ? 'good' : 'bad');
+  }
+}
+
+function paintChgScore() {
+  const c = session.chg;
+  $('runScore').textContent =
+    `${cs('changes')} ${c.changes} · ${cs('streak')} ${c.streak} · ${c.bpm}bpm`;
+}
+
+// live beat fill: the 4 pips + the run-bar track fill across the bar
+function chgBeatNow(b) {
+  if (!chgEl) return;
+  [...chgEl._beats.children].forEach((el, i) =>
+    el.classList.toggle('now', i === b));
+  const rb = document.querySelector('#practiceRun .run-bar > i');
+  if (rb) rb.style.width = `${(b + 1) / 4 * 100}%`;
+}
+
+// End button lands here for chg sessions — the drill is endless, so End
+// IS the natural finish and shows the summary instead of quitting silently.
+function finishChg() {
+  if (!session || session.done) return;
+  session.done = true;
+  stopPoll();
+  metro?.stop(); metro = null;
+  for (const id of timers) clearTimeout(id);
+  timers.clear();
+  hideCountin();
+  mic.stop();
+  $('practiceRun').hidden = true;
+  $('practiceResult').hidden = false;
+  const c = session.chg;
+  const acc = c.changes ? Math.round(100 * c.oks / c.changes) : 0;
+  $('resultBody').innerHTML =
+    `${cs('sumChanges')}: ${c.changes}<br>` +
+    `${t('pr.accuracy')}: ${acc}%<br>` +
+    `${cs('sumStreak')}: ${c.best}<br>` +
+    `${cs('sumBpm')}: ${c.topBpm}bpm`;
+}
+
 // ---------- checking ----------
 
 // Mic path: poll spectrum ~14×/s; a chord passes when ≥4 of the last 6
@@ -430,7 +777,9 @@ function startPoll() {
     if (voteRing.length > 6) voteRing.shift();
     // the current frame must verify too — without this a stale ring can
     // pass the chord on the frame after the spectrum already moved on
-    if (fresh && frameOk && voteRing.filter(Boolean).length >= 4) onCorrect();
+    if (fresh && frameOk && voteRing.filter(Boolean).length >= 4) {
+      if (session.chgMode) chgScore(true); else onCorrect();
+    }
   }, 70);
 }
 
@@ -556,9 +905,40 @@ export function initPractice() {
   $('bpmUp').addEventListener('click', () => setBpm(setup.bpm + 1));
   $('startSession').addEventListener('click', startSession);
   $('endSession').addEventListener('click', () => {
+    if (session && session.chgMode && !session.done) { finishChg(); return; }
     endPractice();
     $('practiceRun').hidden = true;
     $('practiceSetup').hidden = false;
+  });
+  // chord-change setup: slot pickers (rootPicker + quality <select>, the
+  // song editor's pattern), 30–140 bpm slider, auto-ramp toggle
+  for (const slot of ['A', 'B']) {
+    const q = $('chgQual' + slot);
+    CHG_QUALITIES.forEach(k => q.add(new Option(QUALITIES[k].label, k)));
+    q.addEventListener('change', () => {
+      (slot === 'A' ? setup.chgA : setup.chgB).quality = q.value;
+      paintChgSlot(slot);
+    });
+    $('chgSlot' + slot).addEventListener('click', () => openChgPick(slot));
+  }
+  const setChgBpm = v => {
+    setup.chgBpm = Math.min(140, Math.max(30, Math.round(v)));
+    $('chgBpm').value = setup.chgBpm;
+    $('chgBpmVal').textContent = setup.chgBpm;
+    if (session && session.chgMode && !session.done) {
+      session.chg.bpm = setup.chgBpm;
+      session.chg.topBpm = Math.max(session.chg.topBpm, setup.chgBpm);
+      metro?.setBpm(setup.chgBpm);
+      paintChgScore();
+    }
+  };
+  $('chgBpm').addEventListener('input', () => setChgBpm(+$('chgBpm').value));
+  $('chgBpmDown').addEventListener('click', () => setChgBpm(setup.chgBpm - 1));
+  $('chgBpmUp').addEventListener('click', () => setChgBpm(setup.chgBpm + 1));
+  $('chgAuto').addEventListener('click', () => {
+    setup.chgAuto = !setup.chgAuto;
+    $('chgAuto').classList.toggle('sel', setup.chgAuto);
+    if (session && session.chgMode) session.chg.auto = setup.chgAuto;
   });
   $('hearTarget').addEventListener('click', () => {
     const v = voicingsFor(session.items[session.idx].chord)[0];

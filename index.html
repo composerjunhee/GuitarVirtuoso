@@ -77,9 +77,10 @@
         <span class="seg">
           <button class="chip sel" data-pmode="flash" data-i18n="pr.flash">플래시카드</button>
           <button class="chip" data-pmode="prog" data-i18n="pr.prog">진행 연습</button>
+          <button class="chip" data-pmode="chg" id="chgModeBtn">전환</button>
         </span>
       </div>
-      <div class="chip-row">
+      <div class="chip-row" id="inputRow">
         <span class="row-label" data-i18n="pr.input">입력</span>
         <span class="seg">
           <button class="chip sel" data-input="mic" data-i18n="pr.mic">마이크</button>
@@ -117,6 +118,37 @@
           <span id="bpmVal" class="mono">72</span>
         </div>
         <div id="customProg"></div>
+      </div>
+      <div id="chgOpts" hidden>
+        <div class="chip-row">
+          <span class="row-label" id="chgPairLabel">페어</span>
+          <span id="chgPairs" class="chip-row wrap"></span>
+        </div>
+        <div id="chgCustom" hidden>
+          <div class="chip-row">
+            <button id="chgSlotA" class="chip">A</button>
+            <span class="hint" aria-hidden="true">⇄</span>
+            <button id="chgSlotB" class="chip">B</button>
+          </div>
+          <div id="chgPickA" class="chart-edit" hidden>
+            <div id="chgRootsA"></div>
+            <select id="chgQualA" class="gt-select"></select>
+          </div>
+          <div id="chgPickB" class="chart-edit" hidden>
+            <div id="chgRootsB"></div>
+            <select id="chgQualB" class="gt-select"></select>
+          </div>
+        </div>
+        <div class="chip-row bpm-row">
+          <span class="row-label">BPM</span>
+          <button id="chgBpmDown" class="chip bpm-step" aria-label="BPM down">−</button>
+          <input id="chgBpm" type="range" min="30" max="140" value="60">
+          <button id="chgBpmUp" class="chip bpm-step" aria-label="BPM up">+</button>
+          <span id="chgBpmVal" class="mono">60</span>
+        </div>
+        <div class="chip-row">
+          <button id="chgAuto" class="chip sel">자동 템포+</button>
+        </div>
       </div>
       <button id="startSession" class="primary big" data-i18n="pr.start">시작</button>
     </div>

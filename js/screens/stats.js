@@ -4,10 +4,11 @@
 // Strings are a module-local {ko,en} table — i18n.js is shared, not ours.
 //
 // Stat keys are typed at record time by prefix: 'note:C' (fretboard game),
-// 'iv:M3' (ear intervals), 'prog:I–V–vi–IV' (ear progressions); bare keys are
-// chord symbols. Legacy bare interval/progression labels are classified by
-// shape at render; the old highlow drill's junk "E → G" pair keys are
-// filtered out entirely (typeOf → 'junk').
+// 'iv:M3' (ear intervals), 'prog:I–V–vi–IV' (ear progressions), 'chg:C|G'
+// (chord-change drill — the unordered pair, one entry for both directions);
+// bare keys are chord symbols. Legacy bare interval/progression labels are
+// classified by shape at render; the old highlow drill's junk "E → G" pair
+// keys are filtered out entirely (typeOf → 'junk').
 //
 // Markup follows the styles.css stats contract: .stats-summary/.stats-empty,
 // .stats-list > .seg + .stat-group + .stat-rows > .stat-row(.weak,.open) >
@@ -31,11 +32,12 @@ const STR = {
     masteredTitle: '박스 4 이상',
     perItem: '항목별',
     weakest: '취약한 순',
-    tChord: '코드',
-    tInterval: '인터벌',
-    tProg: '진행',
-    tNote: '음',
-    tOther: '기타',
+    t_chord: '코드',
+    t_interval: '인터벌',
+    t_prog: '진행',
+    t_change: '전환',
+    t_note: '음',
+    t_other: '기타',
     gWeak: '취약',
     gLearn: '학습중',
     mapTitle: '코드 숙련도',
@@ -58,11 +60,12 @@ const STR = {
     masteredTitle: 'Leitner box ≥4',
     perItem: 'By item',
     weakest: 'weakest first',
-    tChord: 'Chords',
-    tInterval: 'Intervals',
-    tProg: 'Progressions',
-    tNote: 'Notes',
-    tOther: 'Other',
+    t_chord: 'Chords',
+    t_interval: 'Intervals',
+    t_prog: 'Progressions',
+    t_change: 'Changes',
+    t_note: 'Notes',
+    t_other: 'Other',
     gWeak: 'Needs work',
     gLearn: 'Learning',
     mapTitle: 'Chord skill map',
@@ -106,6 +109,7 @@ export function typeOf(key) {
   if (key.startsWith('note:')) return 'note';
   if (key.startsWith('iv:')) return 'interval';
   if (key.startsWith('prog:')) return 'prog';
+  if (key.startsWith('chg:')) return 'change';
   if (key.includes(' → ')) return 'junk';
   if (IV_RE.test(key)) return 'interval';
   if (key.includes('–') || PROG_LABELS.has(key)) return 'prog';
@@ -121,7 +125,14 @@ const statEntries = stats =>
 // Chord symbols stay Latin in every UI language; re-spell ♯/♭ to the current
 // setting when the stored string parses, otherwise show it verbatim. The
 // 'xxx:' type prefix is stripped first — non-chord keys render as stored.
+// 'chg:A|B' pair keys render as 'A↔B' with each half re-spelled.
 function dispSym(sym) {
+  if (sym.startsWith('chg:')) {
+    return sym.slice(4).split('|').map(p => {
+      const ch = parseSymbol(p);
+      return ch ? chordSymbol(ch, { flat: settings.flat }) : p;
+    }).join('↔');
+  }
   const bare = sym.replace(/^[a-z]+:/, '');
   const ch = parseSymbol(bare);
   return ch ? chordSymbol(ch, { flat: settings.flat }) : bare;
@@ -185,7 +196,7 @@ function summaryCard(stats) {
 
 // per-item list: type filter seg, then collapsible mastery groups of
 // compact rows (tap a row to expand its hits/avg/reset subline)
-const TYPE_ORDER = ['chord', 'interval', 'prog', 'note', 'other'];
+const TYPE_ORDER = ['chord', 'interval', 'prog', 'change', 'note', 'other'];
 
 function itemCard(stats) {
   const entries = statEntries(stats);
